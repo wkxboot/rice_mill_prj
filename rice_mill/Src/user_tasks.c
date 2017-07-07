@@ -6,7 +6,15 @@
 #include "app_fifo.h"
 #include "app_error.h"
 #include "app_log.h"
+#include "mb.h"
 #include "user_tasks.h"
+
+#if APP_LOG_ENABLED > 0    
+#undef  APP_LOG_MODULE_NAME 
+#undef  APP_LOG_MODULE_LEVEL
+#define APP_LOG_MODULE_NAME   "[user_tasks]"
+#define APP_LOG_MODULE_LEVEL   APP_LOG_LEVEL_DEBUG    
+#endif
 
 /* Variables -----------------------------------------------------------------*/
 osThreadId rx_from_ew_task_handle;      //ew = electronic weigher 下位机从电子秤接收数据的任务handle;
@@ -19,18 +27,17 @@ app_fifo_t  fifo_rx_from_ew,fifo_rx_from_host;
 uint8_t buffer_rx_from_ew[BUFFER_SIZE_RX_FROM_EW];
 uint8_t buffer_rx_from_host[BUFFER_SIZE_RX_FROM_HOST];
 
-typedef struct 
-{
-  uint8_t dev_addr; 
-  uint8_t dev_opt;
-  
-  union 
-  {
-  
-  }
-  uint8_t 
-  
-}
+/* ----------------------- Defines ------------------------------------------*/
+#define REG_HOLDING_START           0x1000
+#define REG_HOLDING_NREGS           8
+#define REG_INPUT_START             0x1100
+#define REG_INPUT_NREGS             8
+
+/* ----------------------- Static variables ---------------------------------*/
+static USHORT   usRegHoldingStart = REG_HOLDING_START;
+static USHORT   usRegHoldingBuf[REG_HOLDING_NREGS];
+static USHORT   usRegInputStart = REG_INPUT_START;
+static USHORT   usRegInputBuf[REG_INPUT_NREGS];
 /**************************************************************************/
 // 
 void rx_from_ew_task(void const * argument);
@@ -38,13 +45,13 @@ void rx_from_host_task(void const * argument);
 void tx_to_ew_task(void const * argument);
 void tx_to_host_task(void const * argument);
 
-
+static void tasks_environment_init();
 
 
 
 void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)
 {
-  APP_LOG_ERROR("%s: STACK OVERFLOW!\r\n" );
+  APP_LOG_ERROR("%s: STACK OVERFLOW!\r\n",pcTaskName );
   UNUSED_PARAMETER(xTask);
 }
 void vApplicationMallocFailedHook(void)
@@ -57,6 +64,7 @@ void vApplicationMallocFailedHook(void)
 
  void app_create_user_tasks(void)//创建用户任务
  {
+   /*
   osThreadDef(rx_from_ew_task_val, rx_from_ew_task, osPriorityNormal, 0, 256);
   rx_from_ew_task_handle = osThreadCreate(osThread(rx_from_ew_task_val), NULL);
   
@@ -68,12 +76,14 @@ void vApplicationMallocFailedHook(void)
   
   osThreadDef(tx_to_host_task_val, tx_to_host_task, osPriorityNormal, 0, 256);
   tx_to_host_task_handle = osThreadCreate(osThread(tx_to_host_task_val), NULL);
-  
-
+  */
+  osThreadDef(rx_from_host_task_val, rx_from_host_task, osPriorityNormal, 0, 256);
+  rx_from_host_task_handle = osThreadCreate(osThread(rx_from_host_task_val), NULL);
  }
 
 static void tasks_environment_init()
 {
+  /*
   uint32_t status;
  APP_LOG_DEBUG("任务环境初始化开始！\r\n");
   
@@ -81,12 +91,19 @@ static void tasks_environment_init()
  APP_ERROR_CHECK(status);
  status=app_fifo_init(&fifo_rx_from_host,buffer_rx_from_host,BUFFER_SIZE_RX_FROM_HOST);
  APP_ERROR_CHECK(status);
- 
+ */
+  APP_LOG_DEBUG("任务环境初始化开始！\r\n");
+  for(int i=0;i<REG_INPUT_NREGS;i++)
+  {
+   usRegInputBuf[i]=i;
+  }
+  
   
 }
 
 uint32_t parse_protocol_rx_from_ew()
 {
+  /*
   uint32_t status;
   uint16_t read_len;
   uint8_t temp_buf[BUFFER_SIZE_RX_FROM_EW];
@@ -120,13 +137,19 @@ uint32_t parse_protocol_rx_from_ew()
   {
    APP_LOG_ERROR("从电子秤fifo读数据出错\r\n"); 
   }
+  */
   
+  
+  
+  
+  
+  return 0;
 }
 
 
 void rx_from_ew_task(void const * argument)
 {
-  
+  /*
   while(1)
   {
    osEvent =osSignalWait(SIGNAL_RX_FROM_EW_COMPLETED,osWaitForever); //无超时
@@ -150,12 +173,35 @@ void rx_from_ew_task(void const * argument)
    }
     
   }
-  
+  */
+    tasks_environment_init();
+    /* Select either ASCII or RTU Mode. */
+    ( void )eMBInit( MB_RTU, 0x0A, 0, 115200, MB_PAR_NONE );
+    /* Enable the Modbus Protocol Stack. */
+    ( void )eMBEnable();
+    for( ;; )
+    {
+      /* Call the main polling loop of the Modbus protocol stack. */
+      ( void )eMBPoll();
+    }
 }
+
+
 
 void rx_from_host_task(void const * argument)
 {
+   APP_LOG_DEBUG("MODBUS TASK START!\r\n");
   
+    /* Select either ASCII or RTU Mode. */
+    ( void )eMBInit( MB_RTU, 0x0A, 0, 38400, MB_PAR_EVEN );
+    /* Enable the Modbus Protocol Stack. */
+    ( void )eMBEnable(  );
+    for( ;; )
+    {
+       /* Call the main polling loop of the Modbus protocol stack. */
+      ( void )eMBPoll(  );
+    } 
+    
   
 }
 
@@ -170,3 +216,89 @@ void tx_to_host_task(void const * argument)
   
   
 }
+        
+eMBErrorCode
+eMBRegInputCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNRegs )
+{
+    eMBErrorCode    eStatus = MB_ENOERR;
+    
+    int  iRegIndex;
+
+    APP_LOG_INFO("read input reg! ADDR:%d NUM:%d\r\n",usAddress,usNRegs);
+    
+    if( ( usAddress >= REG_INPUT_START )
+        && ( usAddress + usNRegs <= REG_INPUT_START + REG_INPUT_NREGS ) )
+    {
+        APP_LOG_WARNING("read input protocol parse success!\r\n");
+        iRegIndex = ( int )( usAddress - usRegInputStart );
+        while( usNRegs > 0 )
+        {
+            *pucRegBuffer++ = ( unsigned char )( usRegInputBuf[iRegIndex] >> 8 );
+            *pucRegBuffer++ = ( unsigned char )( usRegInputBuf[iRegIndex] & 0xFF );
+            iRegIndex++;
+            usNRegs--;
+        }
+    }
+    else
+    {
+        eStatus = MB_ENOREG;
+    }
+
+    return eStatus;
+}
+
+eMBErrorCode
+eMBRegHoldingCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNRegs, eMBRegisterMode eMode )
+{
+    eMBErrorCode    eStatus = MB_ENOERR;
+    int             iRegIndex;
+
+    if( ( usAddress >= REG_HOLDING_START ) &&
+        ( usAddress + usNRegs <= REG_HOLDING_START + REG_HOLDING_NREGS ) )
+    {
+        iRegIndex = ( int )( usAddress - usRegHoldingStart );
+        switch ( eMode )
+        {
+            /* Pass current register values to the protocol stack. */
+        case MB_REG_READ:
+            while( usNRegs > 0 )
+            {
+                *pucRegBuffer++ = ( unsigned char )( usRegHoldingBuf[iRegIndex] >> 8 );
+                *pucRegBuffer++ = ( unsigned char )( usRegHoldingBuf[iRegIndex] & 0xFF );
+                iRegIndex++;
+                usNRegs--;
+            }
+            break;
+
+            /* Update current register values with new values from the
+             * protocol stack. */
+        case MB_REG_WRITE:
+            while( usNRegs > 0 )
+            {
+                usRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
+                usRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
+                iRegIndex++;
+                usNRegs--;
+            }
+        }
+    }
+    else
+    {
+        eStatus = MB_ENOREG;
+    }
+    return eStatus;
+}
+
+
+eMBErrorCode
+eMBRegCoilsCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNCoils, eMBRegisterMode eMode )
+{
+    return MB_ENOREG;
+}
+
+eMBErrorCode
+eMBRegDiscreteCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNDiscrete )
+{
+    return MB_ENOREG;
+}
+

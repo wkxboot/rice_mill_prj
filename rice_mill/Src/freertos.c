@@ -52,11 +52,20 @@
 #include "cmsis_os.h"
 
 /* USER CODE BEGIN Includes */     
+#include "user_tasks.h"
+#include "app_log.h"
 
+#if APP_LOG_ENABLED > 0    
+#undef  APP_LOG_MODULE_NAME 
+#undef  APP_LOG_MODULE_LEVEL
+#define APP_LOG_MODULE_NAME   "[freeos]"
+#define APP_LOG_MODULE_LEVEL   APP_LOG_LEVEL_DEBUG 
+#endif
 /* USER CODE END Includes */
 
 /* Variables -----------------------------------------------------------------*/
 osThreadId defaultTaskHandle;
+osTimerId HOST_MB_timerHandle;
 
 /* USER CODE BEGIN Variables */
 
@@ -64,6 +73,7 @@ osThreadId defaultTaskHandle;
 
 /* Function prototypes -------------------------------------------------------*/
 void StartDefaultTask(void const * argument);
+extern void HOST_MB_timer_expired_callback(void const * argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -133,13 +143,18 @@ void MX_FREERTOS_Init(void) {
   /* add semaphores, ... */
   /* USER CODE END RTOS_SEMAPHORES */
 
+  /* Create the timer(s) */
+  /* definition and creation of HOST_MB_timer */
+  osTimerDef(HOST_MB_timer, HOST_MB_timer_expired_callback);
+  HOST_MB_timerHandle = osTimerCreate(osTimer(HOST_MB_timer), osTimerOnce, NULL);
+
   /* USER CODE BEGIN RTOS_TIMERS */
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityRealtime, 0, 256);
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 256);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
@@ -159,7 +174,7 @@ void StartDefaultTask(void const * argument)
   /* Infinite loop */
   app_create_user_tasks();//创建用户任务
   APP_LOG_WARNING("所有任务创建完成，准备删除自己！\r\n");
-  osThreadDelete(defaultTaskHandle);//删除任务
+  osThreadTerminate(defaultTaskHandle);//删除任务
   for(;;)
   {
     osDelay(1);

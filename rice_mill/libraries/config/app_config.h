@@ -23,7 +23,6 @@
 #endif
 
 /************************************************************/
-#if     APP_LOG_USE_SEGGER_RTT > 0
 #include "FreeRTOS.h"
 #include "task.h"
 #define CRITICAL_REGION_ENTER()   taskENTER_CRITICAL()
@@ -56,7 +55,6 @@
 #define SEGGER_RTT_CONFIG_MAX_NUM_DOWN_BUFFERS  2
 #endif
 
-#endif
 // <e> APP_LOG_USES_COLORS - If enabled then ANSI escape code for colors is prefixed to every string
 //==========================================================
 #ifndef APP_LOG_USES_COLORS

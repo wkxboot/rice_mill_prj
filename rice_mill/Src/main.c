@@ -106,6 +106,7 @@ int main(void)
   MX_DMA_Init();
   MX_USART3_UART_Init();
   MX_IWDG_Init();
+  MX_USART2_UART_Init();
 
   /* USER CODE BEGIN 2 */
 
@@ -182,7 +183,16 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+uint32_t APP_TIMESTAMP(void)
+{
+ return osKernelSysTick(); 
+}
 
+int fputc(int ch, FILE *f)
+{
+ HAL_UART_Transmit(&huart3,(uint8_t*)&ch,1,0xff);
+ return ch;
+}
 /* USER CODE END 4 */
 
 /**

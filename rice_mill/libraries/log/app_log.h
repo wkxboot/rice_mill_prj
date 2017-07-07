@@ -1,8 +1,9 @@
 #ifndef   APP_LOG_H__
 #define   APP_LOG_H__
 #include "stdio.h"
+#include "stdint.h"
+#include "app_util.h"
 #include "app_config.h"
-#include "SEGGER_RTT.h"
 
 #define APP_LOG_OFF                0U
 #define APP_LOG_LEVEL_ERROR        1U
@@ -66,7 +67,8 @@
 #if  defined(APP_LOG_USE_UART) && (APP_LOG_USE_UART > 0)
 #define  APP_LOG_STD_OUT(format,arg...)     printf(format,APP_LOG_TIMESTAMP_VALUE,##arg)
 #define  APP_LOG_INIT()                     APP_UART_INIT()
-#elif defined(APP_LOG_USE_UART) && (APP_LOG_USE_SEGGER_RTT > 0)
+#elif defined(APP_LOG_USE_SEGGER_RTT) && (APP_LOG_USE_SEGGER_RTT > 0)
+#include "SEGGER_RTT.h"
 #define  APP_LOG_STD_OUT(format,arg...)     SEGGER_RTT_printf(0,format,APP_LOG_TIMESTAMP_VALUE,##arg)
 #define  APP_LOG_INIT()                     SEGGER_RTT_Init()        
 

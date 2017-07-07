@@ -1,7 +1,7 @@
 [PreviousGenFiles]
-HeaderPath=D:/development/ST/stm32/src_code/rice_mill/Inc
+HeaderPath=D:/development/ST/stm32/src_code/rice_mill_prj/rice_mill/Inc
 HeaderFiles=gpio.h;dma.h;FreeRTOSConfig.h;iwdg.h;usart.h;stm32f1xx_it.h;stm32f1xx_hal_conf.h;main.h;
-SourcePath=D:/development/ST/stm32/src_code/rice_mill/Src
+SourcePath=D:/development/ST/stm32/src_code/rice_mill_prj/rice_mill/Src
 SourceFiles=gpio.h;dma.h;FreeRTOSConfig.h;iwdg.h;usart.h;stm32f1xx_it.h;stm32f1xx_hal_conf.h;main.h;gpio.c;dma.c;freertos.c;iwdg.c;usart.c;stm32f1xx_it.c;stm32f1xx_hal_msp.c;main.c;
 
 [PreviousLibFiles]

@@ -78,7 +78,7 @@
                 </option>
                 <option>
                     <name>OGChipSelectEditMenu</name>
-                    <state>STM32F103ZE	ST STM32F103ZE</state>
+                    <state>STM32F103T6	ST STM32F103T6</state>
                 </option>
                 <option>
                     <name>GenLowLevelInterface</name>
@@ -138,7 +138,7 @@
                 </option>
                 <option>
                     <name>GFPUDeviceSlave</name>
-                    <state>STM32F103ZE	ST STM32F103ZE</state>
+                    <state>STM32F103T6	ST STM32F103T6</state>
                 </option>
                 <option>
                     <name>FPU2</name>
@@ -351,6 +351,10 @@
                     <state>$PROJ_DIR$/../libraries/fifo</state>
                     <state>$PROJ_DIR$/../libraries/util</state>
                     <state>$PROJ_DIR$/../libraries/segger_rtt</state>
+                    <state>$PROJ_DIR$/../Middlewares/Third_Party/freemodbus-v1.5.0/modbus/functions</state>
+                    <state>$PROJ_DIR$/../Middlewares/Third_Party/freemodbus-v1.5.0/modbus/rtu</state>
+                    <state>$PROJ_DIR$/../Middlewares/Third_Party/freemodbus-v1.5.0/modbus/include</state>
+                    <state>$PROJ_DIR$/../Src/modbus_port</state>
                 </option>
                 <option>
                     <name>CCStdIncCheck</name>
@@ -1036,39 +1040,6 @@
         <group>
             <name>User</name>
             <group>
-                <name>libraries</name>
-                <group>
-                    <name>util</name>
-                    <file>
-                        <name>$PROJ_DIR$\..\libraries\util\app_error.c</name>
-                    </file>
-                </group>
-                <group>
-                    <name>fifo</name>
-                    <file>
-                        <name>$PROJ_DIR$\..\libraries\fifo\app_fifo.c</name>
-                    </file>
-                </group>
-                <group>
-                    <name>log</name>
-                    <file>
-                        <name>$PROJ_DIR$\..\libraries\log\app_log.c</name>
-                    </file>
-                </group>
-                <group>
-                    <name>segger_rtt</name>
-                    <file>
-                        <name>$PROJ_DIR$\..\libraries\segger_rtt\RTT_Syscalls_IAR.c</name>
-                    </file>
-                    <file>
-                        <name>$PROJ_DIR$\..\libraries\segger_rtt\SEGGER_RTT.c</name>
-                    </file>
-                    <file>
-                        <name>$PROJ_DIR$\..\libraries\segger_rtt\SEGGER_RTT_printf.c</name>
-                    </file>
-                </group>
-            </group>
-            <group>
                 <name>user_tasks</name>
                 <file>
                     <name>$PROJ_DIR$\..\Src\user_tasks.c</name>
@@ -1155,7 +1126,85 @@
         </group>
     </group>
     <group>
+        <name>libraries</name>
+        <group>
+            <name>fifo</name>
+            <file>
+                <name>$PROJ_DIR$\..\libraries\fifo\app_fifo.c</name>
+            </file>
+        </group>
+        <group>
+            <name>log</name>
+            <file>
+                <name>$PROJ_DIR$\..\libraries\log\app_log.c</name>
+            </file>
+        </group>
+        <group>
+            <name>segger_rtt</name>
+            <file>
+                <name>$PROJ_DIR$\..\libraries\segger_rtt\RTT_Syscalls_IAR.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\libraries\segger_rtt\SEGGER_RTT.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\libraries\segger_rtt\SEGGER_RTT_printf.c</name>
+            </file>
+        </group>
+        <group>
+            <name>util</name>
+            <file>
+                <name>$PROJ_DIR$\..\libraries\util\app_error.c</name>
+            </file>
+        </group>
+    </group>
+    <group>
         <name>Middlewares</name>
+        <group>
+            <name>freemodbus</name>
+            <group>
+                <name>function</name>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus-v1.5.0\modbus\functions\mbfuncholding.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus-v1.5.0\modbus\functions\mbfuncinput.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus-v1.5.0\modbus\functions\mbfuncother.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus-v1.5.0\modbus\functions\mbutils.c</name>
+                </file>
+            </group>
+            <group>
+                <name>modbus_port</name>
+                <file>
+                    <name>$PROJ_DIR$\..\Src\modbus_port\portevent.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Src\modbus_port\portother.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Src\modbus_port\portserial.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Src\modbus_port\porttimer.c</name>
+                </file>
+            </group>
+            <group>
+                <name>rtu</name>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus-v1.5.0\modbus\rtu\mbcrc.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus-v1.5.0\modbus\rtu\mbrtu.c</name>
+                </file>
+            </group>
+            <file>
+                <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus-v1.5.0\modbus\mb.c</name>
+            </file>
+        </group>
         <group>
             <name>FreeRTOS</name>
             <file>
