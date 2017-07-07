@@ -174,7 +174,7 @@ void rx_from_ew_task(void const * argument)
     
   }
   */
-    tasks_environment_init();
+    
     /* Select either ASCII or RTU Mode. */
     ( void )eMBInit( MB_RTU, 0x0A, 0, 115200, MB_PAR_NONE );
     /* Enable the Modbus Protocol Stack. */
@@ -192,6 +192,7 @@ void rx_from_host_task(void const * argument)
 {
    APP_LOG_DEBUG("MODBUS TASK START!\r\n");
   
+   tasks_environment_init();
     /* Select either ASCII or RTU Mode. */
     ( void )eMBInit( MB_RTU, 0x0A, 0, 38400, MB_PAR_EVEN );
     /* Enable the Modbus Protocol Stack. */

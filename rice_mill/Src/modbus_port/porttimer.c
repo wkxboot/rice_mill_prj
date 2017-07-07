@@ -61,7 +61,6 @@ void vMBPortTimersEnable()
 /// \param[in]     millisec      time delay value of the timer.
 /// \return status code that indicates the execution status of the function.
 /// \note MUST REMAIN UNCHANGED: \b osTimerStart shall be consistent in every CMSIS-RTOS.
- // APP_LOG_DEBUG("MB timer start!\r\n");
   osTimerStart ( HOST_MB_timerHandle, 3);
 }
 
@@ -71,13 +70,14 @@ void vMBPortTimersDisable( )
 /// \param[in]     timer_id      timer ID obtained by \ref osTimerCreate.
 /// \return status code that indicates the execution status of the function.
 /// \note MUST REMAIN UNCHANGED: \b osTimerStop shall be consistent in every CMSIS-RTOS.
- // APP_LOG_DEBUG("MB timer stop!\r\n");
+  APP_LOG_DEBUG("MB timer stop!\r\n");
   osStatus osTimerStop (osTimerId timer_id);
+ 
 }
 
 
 void HOST_MB_timer_expired_callback(void const * argument)
 {
- //APP_LOG_DEBUG("MB timer expired!\r\n");
+ APP_LOG_DEBUG("MB timer expired!\r\n");
  pxMBPortCBTimerExpired();
 }

@@ -114,7 +114,7 @@ xMBPortEventPost( eMBEventType eEvent )
         }
     }
     EXIT_CRITICAL_SECTION();
-    APP_LOG_DEBUG("event POST:%d!\r\n",(uint32_t)eEvent);
+    APP_LOG_DEBUG("event POST id:%d!\r\n",(uint32_t)eEvent);
     return xEventSent == pdTRUE ? TRUE : FALSE;
 }
 
@@ -132,6 +132,6 @@ xMBPortEventGet( eMBEventType * peEvent )
         }
     }
     //EXIT_CRITICAL_SECTION(  );
-    APP_LOG_DEBUG("event GET:%d!\r\n",(uint32_t)*peEvent);
+    APP_LOG_DEBUG("event GET id:%d!\r\n",(uint32_t)*peEvent);
     return bEventInQueue;
 }

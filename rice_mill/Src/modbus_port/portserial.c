@@ -77,7 +77,7 @@ vMBPortSerialEnable( BOOL xRxEnable, BOOL xTxEnable )
         /* Enable the UART Transmit data register empty Interrupt */
     __HAL_UART_DISABLE_IT(ptr_host_modbus_uart_handle, UART_IT_TXE);
     
-    APP_LOG_WARNING("MB [enable RX ] [disable TX]£¡\r\n"); 
+    APP_LOG_WARNING("MB [enable RX ] [disable TX]!\r\n"); 
     }
     else
     {
@@ -86,7 +86,7 @@ vMBPortSerialEnable( BOOL xRxEnable, BOOL xTxEnable )
         /* Enable the UART Transmit data register empty Interrupt */
     __HAL_UART_ENABLE_IT(ptr_host_modbus_uart_handle, UART_IT_TXE);
     
-       APP_LOG_WARNING("MB [enable TX ] [disable RX]£¡\r\n"); 
+       APP_LOG_WARNING("MB [enable TX ] [disable RX]!\r\n"); 
     }
 }
 

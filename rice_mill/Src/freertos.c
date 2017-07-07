@@ -173,7 +173,7 @@ void StartDefaultTask(void const * argument)
   /* USER CODE BEGIN StartDefaultTask */
   /* Infinite loop */
   app_create_user_tasks();//创建用户任务
-  APP_LOG_WARNING("所有任务创建完成，准备删除自己！\r\n");
+  APP_LOG_WARNING("all tasks create complete,delete self!!!\r\n");
   osThreadTerminate(defaultTaskHandle);//删除任务
   for(;;)
   {

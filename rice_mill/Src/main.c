@@ -193,6 +193,22 @@ int fputc(int ch, FILE *f)
  HAL_UART_Transmit(&huart3,(uint8_t*)&ch,1,0xff);
  return ch;
 }
+
+void SEGGER_RTT_CRITICAL_REGION_ENTER()      
+{                               
+  if(__get_IPSR()==0)                  
+  {                                  
+   taskENTER_CRITICAL();                                              
+ }  
+}
+
+void SEGGER_RTT_CRITICAL_REGION_EXIT()   
+{                                  
+  if ( __get_IPSR()==0)                 
+  {                                  
+   taskEXIT_CRITICAL();              
+  }                                  
+}
 /* USER CODE END 4 */
 
 /**

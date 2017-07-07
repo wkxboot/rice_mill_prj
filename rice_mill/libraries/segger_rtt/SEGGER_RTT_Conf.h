@@ -57,14 +57,16 @@ Purpose : Implementation of SEGGER real-time transfer (RTT) which
 *       RTT lock configuration for SEGGER Embedded Studio,
 *       Rowley CrossStudio and GCC
 */
+void SEGGER_RTT_CRITICAL_REGION_ENTER();
+void SEGGER_RTT_CRITICAL_REGION_EXIT();
 
 #define SEGGER_RTT_LOCK(SavedState)       \
                    SavedState = 0;        \
-                   CRITICAL_REGION_ENTER()
+                   SEGGER_RTT_CRITICAL_REGION_ENTER()
 
 #define SEGGER_RTT_UNLOCK(SavedState)     \
                    (void)SavedState;      \
-                   CRITICAL_REGION_EXIT()
+                   SEGGER_RTT_CRITICAL_REGION_EXIT()
 
 /*************************** End of file ****************************/
 #endif // SEGGER_RTT_CONF_H

@@ -21,12 +21,7 @@
 #ifndef APP_LOG_USE_TIMESTAMP  
 #define APP_LOG_USE_TIMESTAMP    1
 #endif
-
-/************************************************************/
-#include "FreeRTOS.h"
-#include "task.h"
-#define CRITICAL_REGION_ENTER()   taskENTER_CRITICAL()
-#define CRITICAL_REGION_EXIT()    taskEXIT_CRITICAL()
+                   
 //==========================================================
 
 // <h> nRF_Segger_RTT 
@@ -37,7 +32,7 @@
 //==========================================================
 // <o> SEGGER_RTT_CONFIG_BUFFER_SIZE_UP - Size of upstream buffer. 
 #ifndef SEGGER_RTT_CONFIG_BUFFER_SIZE_UP
-#define SEGGER_RTT_CONFIG_BUFFER_SIZE_UP      512
+#define SEGGER_RTT_CONFIG_BUFFER_SIZE_UP      1024
 #endif
 
 // <o> SEGGER_RTT_CONFIG_MAX_NUM_UP_BUFFERS - Size of upstream buffer. 

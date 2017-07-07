@@ -73,7 +73,7 @@
 #define  APP_LOG_INIT()                     SEGGER_RTT_Init()        
 
 #else 
-#error "APP_DEBUG_USE_UART 和 APP_DEBUG_USE_SEGGER_RTT 必须有一个为真！"//如果同时为真 UART覆盖SEGGER_RTT输出
+#error "APP_DEBUG_USE_UART and APP_DEBUG_USE_SEGGER_RTT are all false!!!!! "//如果同时为真 UART覆盖SEGGER_RTT输出
 #endif
 
 
@@ -121,8 +121,6 @@
 void app_log_init(void);
 void APP_UART_INIT(void);
 uint32_t APP_TIMESTAMP(void);
-
-
 
 
 #endif
