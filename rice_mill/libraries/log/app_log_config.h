@@ -101,7 +101,7 @@
 // <8=> White 
 
 #ifndef APP_LOG_WARNING_COLOR
-#define APP_LOG_WARNING_COLOR 4
+#define APP_LOG_WARNING_COLOR 6
 #endif
 
 // <o> APP_LOG_INFO_COLOR  - ANSI escape code prefix.

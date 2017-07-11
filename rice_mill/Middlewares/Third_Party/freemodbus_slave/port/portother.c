@@ -44,8 +44,6 @@ void            vMBPortTimerClose( void );
 /* ----------------------- Static variables ---------------------------------*/
 
 /* ----------------------- Static functions ---------------------------------*/
-STATIC void     vDefaultHandler( void ) __attribute__ ( ( interrupt( "IRQ" ) ) );
-STATIC void     vDefaultSpuriousHandler( void ) __attribute__ ( ( interrupt( "IRQ" ) ) );
 
 /* ----------------------- Start implementation -----------------------------*/
 
@@ -111,14 +109,4 @@ vMBPortClose( void )
     vMBPortSerialClose(  );
     vMBPortEventClose(  );
     vMBPortTimerClose(  );
-}
-
-void
-vDefaultSpuriousHandler( void )
-{
-}
-
-void
-vDefaultHandler( void )
-{
 }

@@ -3,7 +3,7 @@
 #include "stdio.h"
 #include "stdint.h"
 #include "app_util.h"
-#include "app_config.h"
+#include "app_log_config.h"
 
 #define APP_LOG_OFF                0U
 #define APP_LOG_LEVEL_ERROR        1U
@@ -68,7 +68,6 @@
 #define  APP_LOG_STD_OUT(format,arg...)     printf(format,APP_LOG_TIMESTAMP_VALUE,##arg)
 #define  APP_LOG_INIT()                     APP_UART_INIT()
 #elif defined(APP_LOG_USE_SEGGER_RTT) && (APP_LOG_USE_SEGGER_RTT > 0)
-#include "SEGGER_RTT.h"
 #define  APP_LOG_STD_OUT(format,arg...)     SEGGER_RTT_printf(0,format,APP_LOG_TIMESTAMP_VALUE,##arg)
 #define  APP_LOG_INIT()                     SEGGER_RTT_Init()        
 
@@ -76,38 +75,32 @@
 #error "APP_DEBUG_USE_UART and APP_DEBUG_USE_SEGGER_RTT are all false!!!!! "//如果同时为真 UART覆盖SEGGER_RTT输出
 #endif
 
-
-//#define APP_LOG_ERROR(format,arg...)     APP_LOG_STD_OUT(LOG_ERROR_PREFIX"FUN_NAME:%s LINE:%d\r\n"format,__func__,__LINE__,##arg)
-//#define APP_LOG_WARNING(format,arg...)   APP_LOG_STD_OUT(LOG_WARNING_PREFIX"FUN_NAME:%s LINE:%d\r\n"format,__func__,__LINE__,##arg)
-//#define APP_LOG_INFO(format,arg...)      APP_LOG_STD_OUT(LOG_INFO_PREFIX"FUN_NAME:%s LINE:%d\r\n"format,__func__,__LINE__,##arg)
-//#define APP_LOG_DEBUG(format,arg...)     APP_LOG_STD_OUT(LOG_DEBUG_PREFIX"FUN_NAME:%s LINE:%d\r\n"format,__func__,__LINE__,##arg)
-
-#define APP_LOG_ERROR(format,arg...)                                                             \
-    if ((APP_LOG_MODULE_LEVEL >= APP_LOG_LEVEL_ERROR) &&                                         \
-        (APP_LOG_LEVEL_ERROR <= APP_LOG_DEFAULT_LEVEL))                                          \
-    {                                                                                            \
-      APP_LOG_STD_OUT(LOG_ERROR_PREFIX"FUN_NAME:%s LINE:%d\r\n"format,__func__,__LINE__,##arg);  \
+#define APP_LOG_ERROR(format,arg...)                                                              \
+    if ((APP_LOG_MODULE_LEVEL >= APP_LOG_LEVEL_ERROR) &&                                          \
+        (APP_LOG_LEVEL_ERROR <= APP_LOG_DEFAULT_LEVEL))                                           \
+    {                                                                                             \
+      APP_LOG_STD_OUT(LOG_ERROR_PREFIX"func_name:%s line:%d\r\n"format,__func__,__LINE__,##arg);  \
     }
     
-#define APP_LOG_WARNING(format,arg...)                                                           \
-    if ((APP_LOG_MODULE_LEVEL >= APP_LOG_LEVEL_WARNING) &&                                       \
-        (APP_LOG_LEVEL_WARNING <= APP_LOG_DEFAULT_LEVEL))                                        \
-    {                                                                                            \
-      APP_LOG_STD_OUT(LOG_WARNING_PREFIX"FUN_NAME:%s LINE:%d\r\n"format,__func__,__LINE__,##arg);\
+#define APP_LOG_WARNING(format,arg...)                                                            \
+    if ((APP_LOG_MODULE_LEVEL >= APP_LOG_LEVEL_WARNING) &&                                        \
+        (APP_LOG_LEVEL_WARNING <= APP_LOG_DEFAULT_LEVEL))                                         \
+    {                                                                                             \
+      APP_LOG_STD_OUT(LOG_WARNING_PREFIX"func_name:%s line:%d\r\n"format,__func__,__LINE__,##arg);\
     }
     
-#define APP_LOG_INFO(format,arg...)                                                              \
-    if ((APP_LOG_MODULE_LEVEL >= APP_LOG_LEVEL_INFO) &&                                          \
-        (APP_LOG_LEVEL_INFO <= APP_LOG_DEFAULT_LEVEL))                                           \
-    {                                                                                            \
-      APP_LOG_STD_OUT(LOG_INFO_PREFIX"FUN_NAME:%s LINE:%d\r\n"format,__func__,__LINE__,##arg);   \
+#define APP_LOG_INFO(format,arg...)                                                               \
+    if ((APP_LOG_MODULE_LEVEL >= APP_LOG_LEVEL_INFO) &&                                           \
+        (APP_LOG_LEVEL_INFO <= APP_LOG_DEFAULT_LEVEL))                                            \
+    {                                                                                             \
+      APP_LOG_STD_OUT(LOG_INFO_PREFIX"func_name:%s line:%d\r\n"format,__func__,__LINE__,##arg);   \
     }
     
-#define APP_LOG_DEBUG(format,arg...)                                                             \
-    if ((APP_LOG_MODULE_LEVEL >= APP_LOG_LEVEL_DEBUG) &&                                         \
-        (APP_LOG_LEVEL_DEBUG <= APP_LOG_DEFAULT_LEVEL))                                          \
-    {                                                                                            \
-      APP_LOG_STD_OUT(LOG_DEBUG_PREFIX"function:%s LINE:%d\r\n"format,__func__,__LINE__,##arg);  \
+#define APP_LOG_DEBUG(format,arg...)                                                              \
+    if ((APP_LOG_MODULE_LEVEL >= APP_LOG_LEVEL_DEBUG) &&                                          \
+        (APP_LOG_LEVEL_DEBUG <= APP_LOG_DEFAULT_LEVEL))                                           \
+    {                                                                                             \
+      APP_LOG_STD_OUT(LOG_DEBUG_PREFIX"func_name:%s line:%d\r\n"format,__func__,__LINE__,##arg);  \
     }
 
 #else
@@ -121,6 +114,13 @@
 void app_log_init(void);
 void APP_UART_INIT(void);
 uint32_t APP_TIMESTAMP(void);
-
+/*********************************************************************
+*
+*       RTT printf functions (require SEGGER_RTT_printf.c)
+*
+**********************************************************************
+*/
+int SEGGER_RTT_printf(unsigned BufferIndex, const char * sFormat, ...);
+void         SEGGER_RTT_Init             (void);
 
 #endif

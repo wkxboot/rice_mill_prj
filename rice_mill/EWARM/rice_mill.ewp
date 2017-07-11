@@ -347,14 +347,13 @@
                     <state>$PROJ_DIR$/../Drivers/CMSIS/Include</state>
                     <state>$PROJ_DIR$/../libraries</state>
                     <state>$PROJ_DIR$/../libraries/log</state>
-                    <state>$PROJ_DIR$/../libraries/config</state>
                     <state>$PROJ_DIR$/../libraries/fifo</state>
                     <state>$PROJ_DIR$/../libraries/util</state>
                     <state>$PROJ_DIR$/../libraries/segger_rtt</state>
-                    <state>$PROJ_DIR$/../Middlewares/Third_Party/freemodbus-v1.5.0/modbus/functions</state>
-                    <state>$PROJ_DIR$/../Middlewares/Third_Party/freemodbus-v1.5.0/modbus/rtu</state>
-                    <state>$PROJ_DIR$/../Middlewares/Third_Party/freemodbus-v1.5.0/modbus/include</state>
-                    <state>$PROJ_DIR$/../Src/modbus_port</state>
+                    <state>$PROJ_DIR$/../Middlewares/Third_Party/freemodbus_slave/modbus/functions</state>
+                    <state>$PROJ_DIR$/../Middlewares/Third_Party/freemodbus_slave/modbus/rtu</state>
+                    <state>$PROJ_DIR$/../Middlewares/Third_Party/freemodbus_slave/modbus/include</state>
+                    <state>$PROJ_DIR$/../Middlewares/Third_Party/freemodbus_slave/port</state>
                 </option>
                 <option>
                     <name>CCStdIncCheck</name>
@@ -650,7 +649,7 @@
                 </option>
                 <option>
                     <name>OOCOutputFile</name>
-                    <state>Project.srec</state>
+                    <state>rice_mill.srec</state>
                 </option>
                 <option>
                     <name>OOCCommandLineProducer</name>
@@ -1161,51 +1160,6 @@
     <group>
         <name>Middlewares</name>
         <group>
-            <name>freemodbus</name>
-            <group>
-                <name>function</name>
-                <file>
-                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus-v1.5.0\modbus\functions\mbfuncholding.c</name>
-                </file>
-                <file>
-                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus-v1.5.0\modbus\functions\mbfuncinput.c</name>
-                </file>
-                <file>
-                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus-v1.5.0\modbus\functions\mbfuncother.c</name>
-                </file>
-                <file>
-                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus-v1.5.0\modbus\functions\mbutils.c</name>
-                </file>
-            </group>
-            <group>
-                <name>modbus_port</name>
-                <file>
-                    <name>$PROJ_DIR$\..\Src\modbus_port\portevent.c</name>
-                </file>
-                <file>
-                    <name>$PROJ_DIR$\..\Src\modbus_port\portother.c</name>
-                </file>
-                <file>
-                    <name>$PROJ_DIR$\..\Src\modbus_port\portserial.c</name>
-                </file>
-                <file>
-                    <name>$PROJ_DIR$\..\Src\modbus_port\porttimer.c</name>
-                </file>
-            </group>
-            <group>
-                <name>rtu</name>
-                <file>
-                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus-v1.5.0\modbus\rtu\mbcrc.c</name>
-                </file>
-                <file>
-                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus-v1.5.0\modbus\rtu\mbrtu.c</name>
-                </file>
-            </group>
-            <file>
-                <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus-v1.5.0\modbus\mb.c</name>
-            </file>
-        </group>
-        <group>
             <name>FreeRTOS</name>
             <file>
                 <name>$PROJ_DIR$\..\Middlewares\Third_Party\FreeRTOS\Source\CMSIS_RTOS\cmsis_os.c</name>
@@ -1236,6 +1190,60 @@
             </file>
             <file>
                 <name>$PROJ_DIR$\..\Middlewares\Third_Party\FreeRTOS\Source\timers.c</name>
+            </file>
+        </group>
+        <group>
+            <name>mb_slave</name>
+            <group>
+                <name>mb_func</name>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_slave\modbus\functions\mbfunccoils.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_slave\modbus\functions\mbfuncdiag.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_slave\modbus\functions\mbfuncdisc.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_slave\modbus\functions\mbfuncholding.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_slave\modbus\functions\mbfuncinput.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_slave\modbus\functions\mbfuncother.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_slave\modbus\functions\mbutils.c</name>
+                </file>
+            </group>
+            <group>
+                <name>mb_port</name>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_slave\port\portevent.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_slave\port\portother.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_slave\port\portserial.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_slave\port\porttimer.c</name>
+                </file>
+            </group>
+            <group>
+                <name>mb_rtu</name>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_slave\modbus\rtu\mbcrc.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_slave\modbus\rtu\mbrtu.c</name>
+                </file>
+            </group>
+            <file>
+                <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_slave\modbus\mb.c</name>
             </file>
         </group>
     </group>

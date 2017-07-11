@@ -41,9 +41,6 @@ File    : SEGGER_RTT_printf.c
 Purpose : Replacement for printf to write formatted data via RTT
 ----------------------------------------------------------------------
 */
-#include "app_config.h"
-#if ( APP_LOG_ENABLED > 0 && APP_LOG_USE_SEGGER_RTT > 0)
-
 #include "SEGGER_RTT.h"
 #include "SEGGER_RTT_Conf.h"
 
@@ -493,7 +490,5 @@ int SEGGER_RTT_printf(unsigned BufferIndex, const char * sFormat, ...) {
   return SEGGER_RTT_vprintf(BufferIndex, sFormat, &ParamList);
 }
 
-
-#endif /* APP_LOG_USE_SEGGER_RTT > 0 */
 
 /*************************** End of file ****************************/

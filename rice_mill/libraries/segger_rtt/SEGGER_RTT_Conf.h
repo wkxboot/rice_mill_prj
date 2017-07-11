@@ -18,7 +18,7 @@ Purpose : Implementation of SEGGER real-time transfer (RTT) which
 
 #ifndef SEGGER_RTT_CONF_H
 #define SEGGER_RTT_CONF_H
-#include "app_config.h"
+#include "app_log_config.h"
 //#include "compiler_abstraction.h"
 #include "app_util.h"
 #ifdef __ICCARM__
