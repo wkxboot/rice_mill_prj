@@ -36,6 +36,12 @@ D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Middlewares/Th
 -I
 D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Middlewares/Third_Party/freemodbus_slave/port
 -I
+D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Middlewares/Third_Party/freemodbus_master/modbus/include
+-I
+D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Middlewares/Third_Party/freemodbus_master/modbus/rtu
+-I
+D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Middlewares/Third_Party/freemodbus_master/port
+-I
 C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\arm\CMSIS\Include
 -I
 C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\arm\inc
@@ -75,6 +81,12 @@ D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party
 D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\freemodbus_slave\modbus\include
 -I
 D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\freemodbus_slave\port
+-I
+D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\freemodbus_master\modbus\include
+-I
+D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\freemodbus_master\modbus\rtu
+-I
+D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\freemodbus_master\port
 -I
 C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\arm\CMSIS\Include
 -D__CHAR_BITS__=8

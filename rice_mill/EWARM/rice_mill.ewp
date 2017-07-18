@@ -354,6 +354,9 @@
                     <state>$PROJ_DIR$/../Middlewares/Third_Party/freemodbus_slave/modbus/rtu</state>
                     <state>$PROJ_DIR$/../Middlewares/Third_Party/freemodbus_slave/modbus/include</state>
                     <state>$PROJ_DIR$/../Middlewares/Third_Party/freemodbus_slave/port</state>
+                    <state>$PROJ_DIR$/../Middlewares/Third_Party/freemodbus_master/modbus/include</state>
+                    <state>$PROJ_DIR$/../Middlewares/Third_Party/freemodbus_master/modbus/rtu</state>
+                    <state>$PROJ_DIR$/../Middlewares/Third_Party/freemodbus_master/port</state>
                 </option>
                 <option>
                     <name>CCStdIncCheck</name>
@@ -1039,7 +1042,10 @@
         <group>
             <name>User</name>
             <group>
-                <name>user_tasks</name>
+                <name>user</name>
+                <file>
+                    <name>$PROJ_DIR$\..\Src\user\mb_slave_cb.c</name>
+                </file>
                 <file>
                     <name>$PROJ_DIR$\..\Src\user_tasks.c</name>
                 </file>
@@ -1190,6 +1196,60 @@
             </file>
             <file>
                 <name>$PROJ_DIR$\..\Middlewares\Third_Party\FreeRTOS\Source\timers.c</name>
+            </file>
+        </group>
+        <group>
+            <name>mb_master</name>
+            <group>
+                <name>mb_func_m</name>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_master\modbus\functions\mbfunccoils_m.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_master\modbus\functions\mbfuncdisc_m.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_master\modbus\functions\mbfuncholding_m.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_master\modbus\functions\mbfuncinput_m.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_master\modbus\functions\mbfuncother_m.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_master\modbus\functions\mbutils_m.c</name>
+                </file>
+            </group>
+            <group>
+                <name>mb_port_m</name>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_master\port\mb_cb_m.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_master\port\port_m.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_master\port\portevent_m.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_master\port\portserial_m.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_master\port\porttimer_m.c</name>
+                </file>
+            </group>
+            <group>
+                <name>mb_rtu_m</name>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_master\modbus\rtu\mbcrc_m.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_master\modbus\rtu\mbrtu_m.c</name>
+                </file>
+            </group>
+            <file>
+                <name>$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_master\modbus\mb_m.c</name>
             </file>
         </group>
         <group>
