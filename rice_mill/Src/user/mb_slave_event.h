@@ -18,7 +18,7 @@
 #define  Z_CLEARING_SETUP_EVENT          (1<<13)
 #define  W_THRESHOLD_SETUP_EVENT         (1<<14)
 
-
+#define ALL_RM_EVENT                     (0xFFFF)
 
 
 

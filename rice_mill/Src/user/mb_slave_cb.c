@@ -64,7 +64,7 @@ typedef enum
  REGHOLDING_MODE,
 }reg_mode_t;
 /**
-* @brief  
+* @brief  获取寄存器的值
 * @param pucRegBuffer 
 * @param 
 * @return 
@@ -120,10 +120,7 @@ void set_reg_value(uint16_t reg_addr,uint16_t reg_size,uint32_t value,reg_mode_t
   uint8_t reg_idx;
   uint16_t *ptr_reg_buff;
  if(reg_mode== REGHOLDING_MODE)
- {
-   reg_idx=reg_addr-REG_HOLDING_START;
-   
- }
+   reg_idx=reg_addr-REG_HOLDING_START; 
  if(reg_mode== REGINPUT_MODE)
    reg_idx=reg_addr-REG_INPUT_START;
  
@@ -140,8 +137,21 @@ void set_reg_value(uint16_t reg_addr,uint16_t reg_size,uint32_t value,reg_mode_t
  }
  
 }
+/**
+* @brief 设置错误码 
+* @param -- 
+* @return -- 
+* @details --
+* @see --
+*/
 
-
+void set_rm_fault_code(uint32_t err_code_bit)
+{
+  uint32_t err_code;
+  err_code=get_reg_value( RM_FAULT_CODE_REGHOLDING_ADDR,2,REGHOLDING_MODE);
+  err_code|=err_code_bit;
+  set_reg_value(RM_FAULT_CODE_REGHOLDING_ADDR,2,err_code,REGHOLDING_MODE); 
+}
 /**
 * @brief -- 
 * @param -- 
@@ -220,6 +230,8 @@ eMBRegHoldingCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNRegs, eMBRegi
             {
                 usRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
                 usRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
+                /******增加回调处理*****/
+                ptr_regholding_write_handler_t[iRegIndex];
                 iRegIndex++;
                 usNRegs--;
             }

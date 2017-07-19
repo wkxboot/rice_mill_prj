@@ -1047,6 +1047,9 @@
                     <name>$PROJ_DIR$\..\Src\user\mb_slave_cb.c</name>
                 </file>
                 <file>
+                    <name>$PROJ_DIR$\..\Src\user\mb_slave_event.c</name>
+                </file>
+                <file>
                     <name>$PROJ_DIR$\..\Src\user_tasks.c</name>
                 </file>
             </group>

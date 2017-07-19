@@ -76,13 +76,6 @@ static void tasks_environment_init()
   
 }
 
-uint32_t parse_protocol_rx_from_ew()
-{
-
-  
-  return 0;
-}
-
 /**
 * @brief -- 
 * @param -- 
@@ -159,8 +152,71 @@ if(RH_MAX >=rh || rh >= RH_MIN)
 }
 void cmd_parse_dispatch_task(void const * argument)
 {
+ osEvent events;
+ events= osSignalWait (ALL_RM_EVENT,oSWaitForever);
+if(events.status!= osEventSignal)
+return;
+
+if(events & RM_SWITCH_SETUP_EVENT)
+{
   
+}
+if(events & RB1_SELECTION_EVENT)
+{
   
+} 
+if(events & RW_SETUP_EVENT)
+{
+  
+} 
+if(events & RL_SETUP_EVENT)
+{
+  
+}
+if(events & RM_FAULT_CODE_SETUP_EVENT)
+{
+  
+}
+if(events & RM_MOTOR_SWITCH_SETUP_EVENT)
+{
+  
+}
+if(events & RB1_1_SWITCH_SETUP_EVENT)
+{
+  
+}
+if(events & RB1_2_SWITCH_SETUP_EVENT)
+{
+  
+}
+if(events & RB2_SWITCH_SETUP_EVENT)
+{
+  
+}
+if(events & UV_LAMP_SWITCH_SETUP_EVENT)
+{
+  
+}
+if(events & E_LAMP_SWITCH_SETUP_EVENT)
+{
+  
+}
+if(events & OH_DOOR_SWITCH_SETUP_EVENT)
+{
+  
+}
+if(events & R_TARE_SETUP_EVENT)
+{
+  
+}
+if(events & Z_CLEARING_SETUP_EVENT)
+{
+  
+}
+if(events & W_THRESHOLD_SETUP_EVENT)
+{
+  
+}
 }
 void rice_mill_execute_task(void const * argument)
 {

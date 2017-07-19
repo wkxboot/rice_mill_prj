@@ -107,4 +107,3 @@ void set_evt_w_threshold_regholding_write(void)       //0x1010      重量定点值
  osSignalSet( rm_execute_thread_handle,W_THRESHOLD_SETUP_EVENT);    
 }
 
-osEvent osSignalWait (int32_t signals, uint32_t millisec)
