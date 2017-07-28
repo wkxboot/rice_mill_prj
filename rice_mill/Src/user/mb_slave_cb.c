@@ -32,29 +32,29 @@ typedef struct
 
 static ptr_regholding_write_handler_t[REG_HOLDING_NREGS]=
 {  
-/*****************************************   µØÖ·         ¼Ä´æÆ÷   ************/
-set_evt_rm_switch_regholding_write,        //0x1000      ÄëÃ×»ú¿ª¹Ø
-set_evt_rb1_selection_regholding_write,    //0x1001      Ã×²ÖÑ¡Ôñ
+/*****************************************   åœ°å€         å¯„å­˜å™¨   ************/
+set_evt_rm_switch_regholding_write,        //0x1000      ç¢¾ç±³æœºå¼€å…³
+set_evt_rb1_selection_regholding_write,    //0x1001      ç±³ä»“é€‰æ‹©
 
-set_evt_rw_regholding_write,               //0x1002      ³öÃ×ÖØÁ¿µÍ
-set_evt_rw_regholding_write,               //0x1003      ³öÃ×ÖØÁ¿¸ß
+set_evt_rw_regholding_write,               //0x1002      å‡ºç±³é‡é‡ä½Ž
+set_evt_rw_regholding_write,               //0x1003      å‡ºç±³é‡é‡é«˜
 
-set_evt_rl_regholding_write,               //0x1004      ÄëÃ×·Ö¶ÈÖµ
+set_evt_rl_regholding_write,               //0x1004      ç¢¾ç±³åˆ†åº¦å€¼
 
-set_evt_rm_fault_code_regholding_write,    //0x1005      ÄëÃ×»ú¹ÊÕÏÂëµÍ
-set_evt_rm_fault_code_regholding_write,    //0x1006      ÄëÃ×»ú¹ÊÕÏÂë¸ß
+set_evt_rm_fault_code_regholding_write,    //0x1005      ç¢¾ç±³æœºæ•…éšœç ä½Ž
+set_evt_rm_fault_code_regholding_write,    //0x1006      ç¢¾ç±³æœºæ•…éšœç é«˜
 
-set_evt_rm_motor_switch_regholding_write,  //0x1007      ÄëÃ×»úÂí´ï/´µ¿·»ú
-set_evt_rb1_1_switch_regholding_write,     //0x1008      1ºÅÃ×²Ö·§ÃÅ
-set_evt_rb1_2_switch_regholding_write,     //0x1009      2ºÅÃ×²Ö·§ÃÅ
-set_evt_rb2_switch_regholding_write,       //0x100a      2¼¶Ã×²Ö·§ÃÅ
-set_evt_uv_lamp_switch_regholding_write,   //0x100b      ×ÏÍâµÆ¿ª¹Ø
-set_evt_e_lamp_switch_regholding_write,    //0x100c      »·¾³µÆ¿ª¹Ø
-set_evt_oh_door_switch_regholding_write,   //0x100d      Éý½µÃÅ¿ª¹Ø
-set_evt_r_tare_regholding_write,           //0x100e      È¥Æ¤
-set_evt_z_clearing_regholding_write,       //0x100f      ÇåÁã
-set_evt_w_threshold_regholding_write,      //0x1010      ÖØÁ¿¶¨µãÖµµÍ
-set_evt_w_threshold_regholding_write       //0x1011      ÖØÁ¿¶¨µãÖµ¸ß
+set_evt_rm_motor_switch_regholding_write,  //0x1007      ç¢¾ç±³æœºé©¬è¾¾/å¹ç³ æœº
+set_evt_rb1_1_switch_regholding_write,     //0x1008      1å·ç±³ä»“é˜€é—¨
+set_evt_rb1_2_switch_regholding_write,     //0x1009      2å·ç±³ä»“é˜€é—¨
+set_evt_rb2_switch_regholding_write,       //0x100a      2çº§ç±³ä»“é˜€é—¨
+set_evt_uv_lamp_switch_regholding_write,   //0x100b      ç´«å¤–ç¯å¼€å…³
+set_evt_e_lamp_switch_regholding_write,    //0x100c      çŽ¯å¢ƒç¯å¼€å…³
+set_evt_oh_door_switch_regholding_write,   //0x100d      å‡é™é—¨å¼€å…³
+set_evt_r_tare_regholding_write,           //0x100e      åŽ»çš®
+set_evt_z_clearing_regholding_write,       //0x100f      æ¸…é›¶
+set_evt_w_threshold_regholding_write,      //0x1010      é‡é‡å®šç‚¹å€¼ä½Ž
+set_evt_w_threshold_regholding_write       //0x1011      é‡é‡å®šç‚¹å€¼é«˜
 };
 
 
@@ -64,7 +64,7 @@ typedef enum
  REGHOLDING_MODE,
 }reg_mode_t;
 /**
-* @brief  »ñÈ¡¼Ä´æÆ÷µÄÖµ
+* @brief  èŽ·å–å¯„å­˜å™¨çš„å€¼
 * @param pucRegBuffer 
 * @param 
 * @return 
@@ -98,7 +98,7 @@ uint32_t get_reg_value(uint16_t reg_addr,uint16_t reg_size,reg_mode_t reg_mode)
  else if(reg_size==2)
  {
  temp= *(uint32_t*)&ptr_reg_buff[reg_idx];
- temp= 0xFFFFFFFF & (temp>>16|temp<<16);//¸ßµÍ×Ö½Úµ÷Õû
+ temp= 0xFFFFFFFF & (temp>>16|temp<<16);//é«˜ä½Žå­—èŠ‚è°ƒæ•´
  }
  
  return temp;
@@ -106,7 +106,7 @@ uint32_t get_reg_value(uint16_t reg_addr,uint16_t reg_size,reg_mode_t reg_mode)
 
 
 /**
-* @brief ÉèÖÃ¼Ä´æÆ÷ÊýÖµ 
+* @brief è®¾ç½®å¯„å­˜å™¨æ•°å€¼ 
 * @param reg_addr 
 * @param reg_size 
 * @param value 
@@ -132,13 +132,13 @@ void set_reg_value(uint16_t reg_addr,uint16_t reg_size,uint32_t value,reg_mode_t
  }
  else if(reg_size==2)
  {
-  temp= 0xFFFFFFFF & (temp>>16|temp<<16);//¸ßµÍ×Ö½Úµ÷Õû
+  temp= 0xFFFFFFFF & (temp>>16|temp<<16);//é«˜ä½Žå­—èŠ‚è°ƒæ•´
  *(uint32_t*)&usRegHoldingBuf[reg_idx]=temp;
  }
  
 }
 /**
-* @brief ÉèÖÃ´íÎóÂë 
+* @brief è®¾ç½®é”™è¯¯ç  
 * @param -- 
 * @return -- 
 * @details --
@@ -230,7 +230,7 @@ eMBRegHoldingCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNRegs, eMBRegi
             {
                 usRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
                 usRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
-                /******Ôö¼Ó»Øµ÷´¦Àí*****/
+                /******å¢žåŠ å›žè°ƒå¤„ç†*****/
                 ptr_regholding_write_handler_t[iRegIndex];
                 iRegIndex++;
                 usNRegs--;

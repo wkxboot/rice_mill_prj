@@ -23,9 +23,9 @@ param([String]$debugfile = "");
 
 if ($debugfile -eq "")
 {
-& "C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\common\bin\cspybat" -f "D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM\settings\rice_mill.rice_mill.general.xcl" --backend -f "D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM\settings\rice_mill.rice_mill.driver.xcl" 
+& "C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\common\bin\cspybat" -f "D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM\settings\rice_mill.rice_mill.general.xcl" --backend -f "D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM\settings\rice_mill.rice_mill.driver.xcl" 
 }
 else
 {
-& "C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\common\bin\cspybat" -f "D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM\settings\rice_mill.rice_mill.general.xcl" --debug_file=$debugfile --backend -f "D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM\settings\rice_mill.rice_mill.driver.xcl" 
+& "C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\common\bin\cspybat" -f "D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM\settings\rice_mill.rice_mill.general.xcl" --debug_file=$debugfile --backend -f "D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM\settings\rice_mill.rice_mill.driver.xcl" 
 }

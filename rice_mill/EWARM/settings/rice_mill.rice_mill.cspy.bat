@@ -25,7 +25,7 @@ if not "%~1" == "" goto debugFile
 
 @echo on 
 
-"C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\common\bin\cspybat" -f "D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM\settings\rice_mill.rice_mill.general.xcl" --backend -f "D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM\settings\rice_mill.rice_mill.driver.xcl" 
+"C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\common\bin\cspybat" -f "D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM\settings\rice_mill.rice_mill.general.xcl" --backend -f "D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM\settings\rice_mill.rice_mill.driver.xcl" 
 
 @echo off 
 goto end 
@@ -34,7 +34,7 @@ goto end
 
 @echo on 
 
-"C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\common\bin\cspybat" -f "D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM\settings\rice_mill.rice_mill.general.xcl" "--debug_file=%~1" --backend -f "D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM\settings\rice_mill.rice_mill.driver.xcl" 
+"C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\common\bin\cspybat" -f "D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM\settings\rice_mill.rice_mill.general.xcl" "--debug_file=%~1" --backend -f "D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM\settings\rice_mill.rice_mill.driver.xcl" 
 
 @echo off 
 :end

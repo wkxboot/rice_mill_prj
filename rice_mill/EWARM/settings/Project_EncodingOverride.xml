@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<userOverrides>
+    <override>
+        <path>D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\FreeRTOS\Source\CMSIS_RTOS\cmsis_os.c</path>
+        <encoding>System</encoding>
+    </override>
+    <override>
+        <path>D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\Src\user\mb_reg.h</path>
+        <encoding>UTF-8</encoding>
+    </override>
+    <override>
+        <path>D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\Src\user\mb_slave_cb.c</path>
+        <encoding>UTF-8</encoding>
+    </override>
+    <override>
+        <path>D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\Src\user\mb_slave_event.c</path>
+        <encoding>UTF-8</encoding>
+    </override>
+    <override>
+        <path>D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\Src\user\mb_slave_event.h</path>
+        <encoding>UTF-8</encoding>
+    </override>
+    <override>
+        <path>D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\Src\user_tasks.c</path>
+        <encoding>UTF-8</encoding>
+    </override>
+    <override>
+        <path>D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\libraries\fifo\app_fifo.c</path>
+        <encoding>UTF-8</encoding>
+    </override>
+</userOverrides>

@@ -1,46 +1,46 @@
-"D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\libraries\util\app_error.c"
+"D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\libraries\util\app_error.c"
 -std=c11
--ferror-limit=100
+-ferror-limit=0
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Inc
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Inc
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Drivers/STM32F1xx_HAL_Driver/Inc
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Drivers/STM32F1xx_HAL_Driver/Inc
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Middlewares/Third_Party/FreeRTOS/Source/portable/IAR/ARM_CM3
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Middlewares/Third_Party/FreeRTOS/Source/portable/IAR/ARM_CM3
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Drivers/CMSIS/Device/ST/STM32F1xx/Include
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Drivers/CMSIS/Device/ST/STM32F1xx/Include
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Middlewares/Third_Party/FreeRTOS/Source/include
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Middlewares/Third_Party/FreeRTOS/Source/include
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Drivers/CMSIS/Include
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Drivers/CMSIS/Include
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../libraries
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../libraries
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../libraries/log
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../libraries/log
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../libraries/fifo
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../libraries/fifo
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../libraries/util
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../libraries/util
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../libraries/segger_rtt
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../libraries/segger_rtt
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Middlewares/Third_Party/freemodbus_slave/modbus/functions
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Middlewares/Third_Party/freemodbus_slave/modbus/functions
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Middlewares/Third_Party/freemodbus_slave/modbus/rtu
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Middlewares/Third_Party/freemodbus_slave/modbus/rtu
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Middlewares/Third_Party/freemodbus_slave/modbus/include
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Middlewares/Third_Party/freemodbus_slave/modbus/include
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Middlewares/Third_Party/freemodbus_slave/port
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Middlewares/Third_Party/freemodbus_slave/port
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Middlewares/Third_Party/freemodbus_master/modbus/include
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Middlewares/Third_Party/freemodbus_master/modbus/include
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Middlewares/Third_Party/freemodbus_master/modbus/rtu
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Middlewares/Third_Party/freemodbus_master/modbus/rtu
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Middlewares/Third_Party/freemodbus_master/port
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Middlewares/Third_Party/freemodbus_master/port
 -I
 C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\arm\CMSIS\Include
 -I
@@ -48,45 +48,45 @@ C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\arm\inc
 -I
 C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\arm\inc\c
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\Inc
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\Inc
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\Drivers\STM32F1xx_HAL_Driver\Inc
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\Drivers\STM32F1xx_HAL_Driver\Inc
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\Drivers\STM32F1xx_HAL_Driver\Inc\Legacy
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\Drivers\STM32F1xx_HAL_Driver\Inc\Legacy
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\FreeRTOS\Source\portable\IAR\ARM_CM3
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\FreeRTOS\Source\portable\IAR\ARM_CM3
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\Drivers\CMSIS\Device\ST\STM32F1xx\Include
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\Drivers\CMSIS\Device\ST\STM32F1xx\Include
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\FreeRTOS\Source\include
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\FreeRTOS\Source\include
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\FreeRTOS\Source\CMSIS_RTOS
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\FreeRTOS\Source\CMSIS_RTOS
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\Drivers\CMSIS\Include
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\Drivers\CMSIS\Include
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\libraries
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\libraries
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\libraries\log
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\libraries\log
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\libraries\fifo
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\libraries\fifo
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\libraries\util
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\libraries\util
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\libraries\segger_rtt
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\libraries\segger_rtt
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\freemodbus_slave\modbus\functions
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\freemodbus_slave\modbus\functions
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\freemodbus_slave\modbus\rtu
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\freemodbus_slave\modbus\rtu
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\freemodbus_slave\modbus\include
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\freemodbus_slave\modbus\include
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\freemodbus_slave\port
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\freemodbus_slave\port
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\freemodbus_master\modbus\include
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\freemodbus_master\modbus\include
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\freemodbus_master\modbus\rtu
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\freemodbus_master\modbus\rtu
 -I
-D:\development\ST\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\freemodbus_master\port
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\freemodbus_master\port
 -I
 C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\arm\CMSIS\Include
 -D__CHAR_BITS__=8
@@ -237,8 +237,8 @@ C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\arm\CMSIS\Include
 -D__JMP_BUF_ELEMENT_TYPE__=unsigned long long int
 -D__JMP_BUF_NUM_ELEMENTS__=8
 -D__TID__=0xcf60
--D__VER__=8011001
--D__BUILD_NUMBER__=13263
+-D__VER__=8011002
+-D__BUILD_NUMBER__=13589
 -D__IAR_SYSTEMS_ICC__=9
 -D__LITTLE_ENDIAN__=1
 -D__BOOL_TYPE__=unsigned char
@@ -305,12 +305,11 @@ C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\arm\CMSIS\Include
 -D__HAS_JOINED_TYPES__=1
 -D__HAS_LOCATED_DECLARATION__=1
 -D__HAS_LOCATED_WITH_INIT__=1
--D__IAR_COMPILERBASE__=655620
--D__IAR_COMPILERBASE_STR__=10.1.4.185
+-D__IAR_COMPILERBASE__=655621
+-D__IAR_COMPILERBASE_STR__=10.1.5.191
 -D__UNICODE_SOURCE_SUPPORTED__=1
 -D__STDC__=1
 -D__STDC_VERSION__=201112L
--D__STDC_HOSTED__=1
 -D__STDC_NO_VLA__=1
 -D__MEMORY_ORDER_RELAXED__=0
 -D__MEMORY_ORDER_CONSUME__=1
@@ -323,6 +322,7 @@ C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\arm\CMSIS\Include
 -D__STDC_LIB_EXT1__=201112L
 -D__STDC_NO_THREADS__=1
 -D__STDC_ISO_10646__=201103L
+-D__STDC_HOSTED__=1
 -D__EDG_IA64_ABI=1
 -D__EDG_IA64_ABI_VARIANT_CTORS_AND_DTORS_RETURN_THIS=1
 -D__EDG_IA64_ABI_USE_INT_STATIC_INIT_GUARD=1
@@ -330,7 +330,7 @@ C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\arm\CMSIS\Include
 -D__cpp_static_assert=200410
 -D__EDG_TYPE_TRAITS_ENABLED=1
 -D__EDG__=1
--D__EDG_VERSION__=412
+-D__EDG_VERSION__=413
 -D__EDG_SIZE_TYPE__=unsigned int
 -D__EDG_PTRDIFF_TYPE__=int
 -D__EDG_DELTA_TYPE=int
@@ -346,11 +346,15 @@ C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\arm\CMSIS\Include
 -D__EDG_SYSV=0
 -D__EDG_ANSIC=1
 -D__EDG_CPP11_IL_EXTENSIONS_SUPPORTED=1
+-D__EDG_FLOAT80_ENABLING_POSSIBLE=0
+-D__EDG_FLOAT128_ENABLING_POSSIBLE=0
 -DUSE_HAL_DRIVER=1
 -DSTM32F103xE=1
 -D_DLIB_CONFIG_FILE_HEADER_NAME=u8"C:\\Program Files (x86)\\IAR Systems\\Embedded Workbench 8.0\\arm\\INC\\c\\DLib_Config_Full.h"
 -D_DLIB_CONFIG_FILE_STRING=u8"C:\\Program Files (x86)\\IAR Systems\\Embedded Workbench 8.0\\arm\\INC\\c\\DLib_Config_Full.h"
--D__VERSION__="IAR ANSI C/C++ Compiler V8.11.1.13263/W32 for ARM"
+-D__VERSION__="IAR ANSI C/C++ Compiler V8.11.2.13589/W32 for ARM"
+-D__ICCARM_OLD_DEFINED_VAARGS__=1
+-D__VA_STACK_ALIGN__=8
 -D__CODE_MEMORY_LIST1__()=__CODE_MEM_HELPER1__(__code, 0 )
 -D__CODE_MEMORY_LIST2__(_P1)=__CODE_MEM_HELPER2__(__code, 0 ,  _P1 )
 -D__CODE_MEMORY_LIST3__(_P1, _P2)=__CODE_MEM_HELPER3__(__code, 0 ,  _P1 ,  _P2 )
