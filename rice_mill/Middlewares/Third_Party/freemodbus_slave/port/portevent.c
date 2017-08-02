@@ -126,7 +126,7 @@ xMBPortEventGet( eMBEventType * peEvent )
    //ENTER_CRITICAL_SECTION(  );
     if( bIsInitialized )
     {
-        if( pdTRUE == xQueueReceive( arxEventHdls[0].xQueueHdl, peEvent, osWaitForever ) )//任务在此等待事件到来 (任务切换)
+        if( pdTRUE == xQueueReceive( arxEventHdls[0].xQueueHdl, peEvent, osWaitForever ) )//浠诲姟鍦ㄦ绛夊緟浜嬩欢鍒版潵 (浠诲姟鍒囨崲)
         {
             bEventInQueue = TRUE;
         }

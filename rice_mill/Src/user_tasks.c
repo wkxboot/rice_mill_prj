@@ -170,20 +170,29 @@ void cmd_parse_dispatch_task(void const * argument)
  osStatus status;
  uint32_t reg_value;
  
+while(1)
+{
  events= osSignalWait(ALL_RM_EVENT,oSWaitForever);
 if(events.status!= osEventSignal)
 {
-
- return; 
+ continue; 
 }
 
-if(events.value & RM_SWITCH_SETUP_EVENT)
+if(events.value.signals & RM_SWITCH_SETUP_EVENT)
 {
  reg_value= get_reg_value(RM_SWITCH_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
  if(reg_value==REG_VALUE_SWITCH_ON )
  {
-  status= osMessagePut(rm_opt_cmd_queue_handle ,CMD_TURN_ON_RM,0);
-  APP_LOG_DEBUG("RM_SWITCH_SETUP_EVENT  ON!status:%d\r\n",status);
+   reg_value= get_rm_fault_code();
+   if(!reg_value)
+   {
+   status= osMessagePut(rm_opt_cmd_queue_handle ,CMD_TURN_ON_RM,0);
+   APP_LOG_DEBUG("RM_SWITCH_SETUP_EVENT  ON!status:%d\r\n",status);
+   }
+   else
+   {
+   APP_LOG_DEBUG("RM_SWITCH_SETUP_EVENT IGNORE!\r\n");  
+   }
  }
  else if(reg_value==REG_VALUE_SWITCH_OFF)
  {
@@ -191,6 +200,8 @@ if(events.value & RM_SWITCH_SETUP_EVENT)
    APP_LOG_DEBUG("RM_SWITCH_SETUP_EVENT  OFF!status:%d\r\n",status);
  }
 }
+
+
 if(events.value.signals & RB1_SELECTION_EVENT)
 {
    reg_value= get_reg_value(RB1_SELECTION_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
@@ -251,15 +262,20 @@ if(events.value.signals & RL_SETUP_EVENT)
 }
 if(events.value.signals & RM_FAULT_CODE_SETUP_EVENT)
 {
-   reg_value= get_reg_value(RM_FAULT_CODE_REGHOLDING_ADDR, 2,REGHOLDING_MODE);
+   reg_value=  get_rm_fault_code();
    
    APP_LOG_DEBUG("RM_FAULT_CODE_SETUP_EVENT!\r\n");
    APP_LOG_DEBUG("reg_value:%d\r\n",reg_value);
    
+   if(reg_value)
+   {
+   set_reg_value(RM_SWITCH_REGHOLDING_ADDR, 1,REG_VALUE_SWITCH_OFF,REGHOLDING_MODE); //修改值为REG_VALUE_SWITCH_OFF
+   APP_LOG_DEBUG("internal turn off rm_switch as rm fault!\r\n");
+   }
    status= osMessagePut (rm_opt_cmd_queue_handle ,CMD_SET_RM_FAULT_CODE,0);
-   APP_LOG_DEBUG("set rm fault code! status:%d\r\n",status);
-   
+   APP_LOG_DEBUG("set rm fault code! status:%d\r\n",status);  
 }
+
 if(events.value.signals & RM_MOTOR_SWITCH_SETUP_EVENT)
 {
   reg_value= get_reg_value(RM_MOTOR_SWITCH_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
@@ -415,20 +431,24 @@ if(events.value.signals & EW_THRESHOLD_SETUP_EVENT)
   APP_LOG_DEBUG("set ew threshold!status:%d\r\n",status);
  }  
 }
-
+}
 }
 
-
+void rm_rb1_switch_asyn_task(void const * argument)
+{
+  osSignalWait(RM_RB1_1_OPEN_EVT|RM_RB1_1_CLOSE_EVT|RM_RB1_2_OPEN_EVT|RM_RB1_2_CLOSE_EVT,oSWaitForever);//等待碾米开始
+  
+}
 
 /*
- * 碾米机动作执行任务
+ * 碾米机动作异步命令执行任务
  */
-void rice_mill_execute_task(void const * argument)
+void rice_mill_execute_asyn_task(void const * argument)
 {
  osEvent event;
  while(1)
  {
- event= osMessageGet(rm_opt_cmd_queue_handle,0);
+ event= osMessageGet(rm_opt_cmd_queue_handle,1000);
  if(event.status!=osEventMessage)
  {
    return ;
@@ -440,7 +460,7 @@ void rice_mill_execute_task(void const * argument)
  rm_exe_turn_on_rm();  
  break;   
  case CMD_TURN_OFF_RM:
- rm_exe_turn_on_rm();    
+ rm_exe_turn_off_rm();    
  break;   
  case CMD_RB1_SELECT_NO1:
  rm_exe_rb1_select_no1();  
@@ -526,4 +546,125 @@ void rice_mill_execute_task(void const * argument)
  }
  }
  
+}
+
+/********************************************************************
+碾米机同步执行任务
+********************************************************************/
+#define  RM_EXE_START_EVT                (1<<0)
+#define  RM_EXE_PAUSE_EVT                (1<<1)
+#define  RM_EXE_RB1_1_OPEN_OK_EVT        (1<<2)
+#define  RM_EXE_RB1_2_OPEN_OK_EVT        (1<<4)
+#deifne  RM_EXE_RB1_2_OPEN_ERROR_EVT     (1<<5)
+#define  RM_EXE_RB1_CLOSE_OK_EVT         (1<<6) 
+#define  RM_EXE_RB1_CLOSE_ERROR_EVT      (1<<7)
+#define  RM_EXE_RB2_OPEN_OK_EVT          (1<<8)
+#define  RM_EXE_RB2_OPEN_ERROR_EVT       (1<<9)
+#define  RM_EXE_RB2_CLOSE_OK_EVT         (1<<10)
+#define  RM_EXE_RB2_CLOSE_ERROR_EVT      (1<<11)
+#define  RM_EXE_EW_SET_OK_EVT            (1<<12)
+#define  RM_EXE_EW_SET_ERROR_EVT         (1<<13)
+#define  RM_EXE_EW_OVERLOAD_EVT          (1<<14)
+#define  RM_EXE_EW_VALUE_INVALID_EVT     (1<<15)
+#define  RM_EXE_RUN_TIME_OK_EVT          (1<<16)
+#define  RM_EXE_RUN_TIME_ERROR_EVT       (1<<17)
+#define  RM_EXE_RUN_SET_FAULT_EVT        (1<<18)
+#define  RM_EXE_RUN_CLEAR_FAULT_EVT      (1<<19)
+#define  RM_EXE_RUN_GET_RW_OK_EVT
+#define  RM_EXE_RUN_GET_RW_TIMEOUT_EVT
+void rice_mill_execute_sync_task(void const * argument)
+{
+EventBits_t xEventGroupClearBits( EventGroupHandle_t xEventGroup, const EventBits_t uxBitsToClear )
+ uint32_t fault_code;
+ uint32_t rb;
+ uint32_t event_bits;
+ osStatus status;
+ uint32_t reg_value;
+while(1)
+{
+ xEventGroupWaitBits(rm_sync_event_hdl,RM_EXE_START_EVT ,pdTRUE,pdFALSE,oSWaitForever );//等待碾米开始
+do
+{
+ uint32_t rm_w;//设置电子秤阈值
+ rm_w=get_reg_value( RW_REGHOLDING_ADDR,2,REGHOLDING_MODE);
+ set_reg_value(EW_THRESHOLD_REGHOLDING_ADDR,2,rm_w,REGHOLDING_MODE);
+ 
+ event_bits= xEventGroupWaitBits(rm_sync_event_hdl,RM_EXE_EW_SET_OK_EVT|RM_EXE_PAUSE_EVT ,pdTRUE,pdFALSE,oSWaitForever );//等待出米重量设置完成
+
+ if(event_bits & RM_EXE_PAUSE_EVT)
+ {
+  xEventGroupWaitBits(rm_sync_event_hdl,RM_EXE_START_EVT ,pdTRUE,pdFALSE,oSWaitForever );//等待碾米开始
+ }
+}while( !(event_bits & RM_EXE_EW_SET_OK_EVT));
+
+do//等待达到重量
+{
+uint16_t rb1=RB1_NO_1_ID;//默认
+rb1=get_reg_value( RB1_SELECTION_REGHOLDING_ADDR,1,REGHOLDING_MODE);
+if(rb1==RB1_NO_1_ID)
+{
+  rm_exe_turn_on_rb1_1_switch();
+}
+else if(rb1==RB1_NO_2_ID)
+{
+  rm_exe_turn_on_rb1_2_switch();
+}
+event_bits= xEventGroupWaitBits(rm_sync_event_hdl,RM_EXE_RUN_GET_RW_OK_EVT|RM_EXE_PAUSE_EVT,pdTRUE,pdFALSE,oSWaitForever);
+if(event_bits & RM_EXE_PAUSE_EVT)
+{
+xEventGroupWaitBits(rm_sync_event_hdl,RM_EXE_START_EVT,pdTRUE,pdFALSE,oSWaitForever);
+}
+}while(!(event_bits & RM_EXE_RUN_GET_RW_OK_EVT));
+
+
+
+
+
+
+
+}
+ 
+}
+
+
+
+
+}
+
+ 
+ osSignalSet( rm_execute_thread_handle,RM_FAULT_CODE_SETUP_EVENT);  
+ 
+
+ 
+  g_rm_status=RM_STATUS_TURN_ON;
+  
+}
+}
+
+void rm_exe_turn_on_rm()
+{
+
+}
+
+void rm_exe_turn_off_rm()
+{
+  g_rm_status=RM_STATUS_TURN_OFF; 
+  osMessagePut(rm_opt_cmd_queue_handle ,CMD_DISABLE_ZERO_CLEARING,0);
+}
+
+void rm_exe_turn_on_rb1_1_switch()
+{
+ osTimerStart (rm_exe_timeout_timer_handle,RM_EXE_TIMER_TIMEOUT_VALUE);//打开超时定时器
+ BSP_motor_turn_on_rb1_1();   
+}
+
+void rm_exe_turn_off_rb1_1_switch()
+{
+ osTimerStop (rm_exe_timeout_timer_handle);//关闭超时定时器
+ BSP_motor_turn_off_rb1_1();  
+
+ if(g_rm_status==RM_STATUS_TURN_ON)
+ {
+ rm_(rm_opt_cmd_queue_handle ,CMD_TURN_ON_RM_MOTOR,0); //准备下一步 开启碾米电机
+ }
 }

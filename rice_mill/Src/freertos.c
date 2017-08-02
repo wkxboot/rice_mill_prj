@@ -172,9 +172,9 @@ void StartDefaultTask(void const * argument)
 
   /* USER CODE BEGIN StartDefaultTask */
   /* Infinite loop */
-  app_create_user_tasks();//创建用户任务
+  app_create_user_tasks();//鍒涘缓鐢ㄦ埛浠诲姟
   APP_LOG_WARNING("all tasks create complete,delete self!!!\r\n");
-  osThreadTerminate(defaultTaskHandle);//删除任务
+  osThreadTerminate(defaultTaskHandle);//鍒犻櫎浠诲姟
   for(;;)
   {
     osDelay(1);

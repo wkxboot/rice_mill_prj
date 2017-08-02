@@ -74,36 +74,29 @@ typedef enum
 
 uint32_t get_reg_value(uint16_t reg_addr,uint16_t reg_size,reg_mode_t reg_mode)
 {
+  uint8_t ptr_reg[4]={0};
   uint32_t temp;
-  uint8_t reg_idx;
-  uint16_t *ptr_reg_buff;
-  
- if(reg_mode== REGHOLDING_MODE)
- {
-   reg_idx=reg_addr-REG_HOLDING_START;
-   ptr_reg_buff=usRegHoldingBuf;
- }
- if(reg_mode== REGINPUT_MODE)
- {
-   reg_idx=reg_addr-REG_INPUT_START;
-    ptr_reg_buff=usRegInputBuf;
- }
-   
-  
-  
- if(reg_size==1)
- {
- temp= usRegHoldingBuf[reg_idx] & 0xFFFF; 
- }
+  if(reg_size==1)
+  {
+    if(reg_mode==REGINPUT_MODE)
+    eMBRegInputCB(ptr_reg, reg_addr,1);
+    if(reg_mode==REGHOLDING_MODE)
+    eMBRegHoldingCB(ptr_reg, reg_addr,1,MB_REG_READ);  
+    
+    temp=ptr_reg[0]<<8|ptr_reg[1];
+  }
  else if(reg_size==2)
- {
- temp= *(uint32_t*)&ptr_reg_buff[reg_idx];
- temp= 0xFFFFFFFF & (temp>>16|temp<<16);//高低字节调整
- }
- 
+  {
+    if(reg_mode==REGINPUT_MODE)
+    eMBRegInputCB(ptr_reg, reg_addr,2);
+    if(reg_mode==REGHOLDING_MODE)
+    eMBRegHoldingCB(ptr_reg, reg_addr,2,MB_REG_READ); 
+    
+    temp=ptr_reg[0]<<24|ptr_reg[1]<<16|ptr_reg[2]<<8|ptr_reg[3];
+  }
+  
  return temp;
 }
-
 
 /**
 * @brief 设置寄存器数值 
@@ -114,29 +107,33 @@ uint32_t get_reg_value(uint16_t reg_addr,uint16_t reg_size,reg_mode_t reg_mode)
 * @details --
 * @see --
 */
-void set_reg_value(uint16_t reg_addr,uint16_t reg_size,uint32_t value,reg_mode_t reg_mode )
+void set_reg_value(uint16_t reg_addr,uint16_t reg_size,uint32_t value,reg_mode_t reg_mode)
 {
-  uint32_t temp;
-  uint8_t reg_idx;
-  uint16_t *ptr_reg_buff;
- if(reg_mode== REGHOLDING_MODE)
-   reg_idx=reg_addr-REG_HOLDING_START; 
- if(reg_mode== REGINPUT_MODE)
-   reg_idx=reg_addr-REG_INPUT_START;
+ uint8_t ptr_reg[4];
  
-   temp=value;
-  
  if(reg_size==1)
  {
-    usRegHoldingBuf[reg_idx] = temp &0xFFFF; 
+ ptr_reg[0]=(value>>8)&0xFF;
+ ptr_reg[1]=value&0xFF;
+ if(reg_mode==REGINPUT_MODE)
+ eMBRegInputCB_Write(ptr_reg, reg_addr,1 );
+ if(reg_mode==REGHOLDING_MODE)
+ eMBRegHoldingCB(ptr_reg, reg_addr,1,MB_REG_WRITE);  
  }
- else if(reg_size==2)
+  if(reg_size==2)
  {
-  temp= 0xFFFFFFFF & (temp>>16|temp<<16);//高低字节调整
- *(uint32_t*)&usRegHoldingBuf[reg_idx]=temp;
- }
- 
+ ptr_reg[0]=(value>>24)&0xFF;
+ ptr_reg[1]=(value>>16)&0xFF;
+ ptr_reg[2]=(value>>8)&0xFF;
+ ptr_reg[3]=value&0xFF;
+ if(reg_mode==REGINPUT_MODE)
+ eMBRegInputCB_Write(ptr_reg, reg_addr,2);
+ if(reg_mode==REGHOLDING_MODE)
+ eMBRegHoldingCB(ptr_reg, reg_addr,2,MB_REG_WRITE);  
+ } 
 }
+
+
 /**
 * @brief 设置错误码 
 * @param -- 
@@ -160,9 +157,50 @@ void set_rm_fault_code(uint32_t err_code_bit)
 * @see --
 */
 
+uint32_t get_rm_fault_code()
+{
+  uint32_t err_code;
+  err_code=get_reg_value( RM_FAULT_CODE_REGHOLDING_ADDR,2,REGHOLDING_MODE); 
+  
+  return err_code;
+}
 
 
 
+
+
+/*****************************************************************************/
+eMBErrorCode
+eMBRegInputCB_Write( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNRegs )
+{
+  eMBErrorCode    eStatus = MB_ENOERR;
+    
+    int  iRegIndex;
+
+    APP_LOG_INFO("internal write input reg! ADDR:%d NUM:%d\r\n",usAddress,usNRegs);
+    
+    if( ( usAddress >= REG_INPUT_START )
+        && ( usAddress + usNRegs <= REG_INPUT_START + REG_INPUT_NREGS ) )
+    {
+        iRegIndex = ( int )( usAddress - usRegInputStart );
+        while( usNRegs > 0 )
+        {
+            usRegInputBuf[iRegIndex] = *pucRegBuffer++ << 8;
+            usRegInputBuf[iRegIndex] |= *pucRegBuffer++;
+            iRegIndex++;
+            usNRegs--;
+        }
+    }
+    else
+    {
+        eStatus = MB_ENOREG;
+    }
+
+    return eStatus;
+} 
+  
+  
+}
 /**
 * @brief -- 
 * @param -- 
@@ -174,15 +212,11 @@ eMBErrorCode
 eMBRegInputCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNRegs )
 {
     eMBErrorCode    eStatus = MB_ENOERR;
-    
-    int  iRegIndex;
+    int             iRegIndex;
 
-    APP_LOG_INFO("read input reg! ADDR:%d NUM:%d\r\n",usAddress,usNRegs);
-    
     if( ( usAddress >= REG_INPUT_START )
         && ( usAddress + usNRegs <= REG_INPUT_START + REG_INPUT_NREGS ) )
     {
-        APP_LOG_WARNING("read input protocol parse success!\r\n");
         iRegIndex = ( int )( usAddress - usRegInputStart );
         while( usNRegs > 0 )
         {
@@ -199,11 +233,12 @@ eMBRegInputCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNRegs )
 
     return eStatus;
 }
-
+/****************************************************************************/
 eMBErrorCode
 eMBRegHoldingCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNRegs, eMBRegisterMode eMode )
 {
     eMBErrorCode    eStatus = MB_ENOERR;
+    uint16_t prv_value;
     int             iRegIndex;
 
     if( ( usAddress >= REG_HOLDING_START ) &&
@@ -228,10 +263,13 @@ eMBRegHoldingCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNRegs, eMBRegi
         case MB_REG_WRITE:
             while( usNRegs > 0 )
             {
+                prv_value=usRegHoldingBuf[iRegIndex];
                 usRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
                 usRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
                 /******增加回调处理*****/
+                if(prv_value!=usRegHoldingBuf[iRegIndex])//和原来的不相等，就触发写事件
                 ptr_regholding_write_handler_t[iRegIndex];
+                
                 iRegIndex++;
                 usNRegs--;
             }
