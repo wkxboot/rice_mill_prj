@@ -236,6 +236,14 @@ if(events.value.signals & RL_SETUP_EVENT)
 {
    uint16_t cmd;
    reg_value= get_reg_value(RL_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
+
+   APP_LOG_DEBUG("RL_SETUP_EVENT!\r\n");
+   APP_LOG_DEBUG("reg_value:%d\r\n",reg_value);
+}
+if(events.value.signals & RL_CONTROL_EVENT)
+{
+    uint16_t cmd;
+   reg_value= get_reg_value(RL_CONTROL_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
    
    APP_LOG_DEBUG("RL_SETUP_EVENT!\r\n");
    APP_LOG_DEBUG("reg_value:%d\r\n",reg_value);
@@ -257,7 +265,7 @@ if(events.value.signals & RL_SETUP_EVENT)
      cmd=CMD_SET_RL_9;  
    }
    status= osMessagePut (rm_opt_cmd_queue_handle ,cmd,0);
-   APP_LOG_DEBUG("cmd is valied! status:%d\r\n",status);
+   APP_LOG_DEBUG("cmd is valied! status:%d\r\n",status);  
    
 }
 if(events.value.signals & RM_FAULT_CODE_SETUP_EVENT)
@@ -552,7 +560,7 @@ void rice_mill_execute_asyn_task(void const * argument)
 碾米机同步执行任务
 ********************************************************************/
 #define  RM_EXE_START_EVT                (1<<0)
-#define  RM_EXE_PAUSE_EVT                (1<<1)
+#define  RM_STEP_HALT_EVT                (1<<1)
 #define  RM_EXE_RB1_1_OPEN_OK_EVT        (1<<2)
 #define  RM_EXE_RB1_2_OPEN_OK_EVT        (1<<4)
 #deifne  RM_EXE_RB1_2_OPEN_ERROR_EVT     (1<<5)
@@ -572,74 +580,155 @@ void rice_mill_execute_asyn_task(void const * argument)
 #define  RM_EXE_RUN_CLEAR_FAULT_EVT      (1<<19)
 #define  RM_EXE_RUN_GET_RW_OK_EVT
 #define  RM_EXE_RUN_GET_RW_TIMEOUT_EVT
-void rice_mill_execute_sync_task(void const * argument)
+
+void rm_mill_shutdown()
 {
-EventBits_t xEventGroupClearBits( EventGroupHandle_t xEventGroup, const EventBits_t uxBitsToClear )
- uint32_t fault_code;
- uint32_t rb;
- uint32_t event_bits;
- osStatus status;
- uint32_t reg_value;
-while(1)
+  set_reg_value(); //碾米进度错误
+  set_reg_value();//碾米开关
+  osThreadSuspend(NULL);//挂起自己
+}
+void rm_mill_busy()
 {
- xEventGroupWaitBits(rm_sync_event_hdl,RM_EXE_START_EVT ,pdTRUE,pdFALSE,oSWaitForever );//等待碾米开始
-do
+set_reg_value(); //碾米进度进行中 
+}
+void rm_mill_opt_complete()
 {
+  set_reg_value(); //碾米进度完成
+  set_reg_value();//碾米开关
+  osThreadSuspend(NULL);//挂起自己  
+}
+
+void rm_step_set_rw()
+ {
  uint32_t rm_w;//设置电子秤阈值
  rm_w=get_reg_value( RW_REGHOLDING_ADDR,2,REGHOLDING_MODE);
- set_reg_value(EW_THRESHOLD_REGHOLDING_ADDR,2,rm_w,REGHOLDING_MODE);
- 
- event_bits= xEventGroupWaitBits(rm_sync_event_hdl,RM_EXE_EW_SET_OK_EVT|RM_EXE_PAUSE_EVT ,pdTRUE,pdFALSE,oSWaitForever );//等待出米重量设置完成
-
- if(event_bits & RM_EXE_PAUSE_EVT)
- {
-  xEventGroupWaitBits(rm_sync_event_hdl,RM_EXE_START_EVT ,pdTRUE,pdFALSE,oSWaitForever );//等待碾米开始
+ set_reg_value(EW_THRESHOLD_REGHOLDING_ADDR,2,rm_w,REGHOLDING_MODE); 
  }
-}while( !(event_bits & RM_EXE_EW_SET_OK_EVT));
-
-do//等待达到重量
+void rm_step_opt_rb1(uint16_t reg_value)
 {
-uint16_t rb1=RB1_NO_1_ID;//默认
-rb1=get_reg_value( RB1_SELECTION_REGHOLDING_ADDR,1,REGHOLDING_MODE);
-if(rb1==RB1_NO_1_ID)
+   uint16_t rb1;
+   rb1=get_reg_value( RB1_SELECTION_REGHOLDING_ADDR,1,REGHOLDING_MODE);
+   if(rb1==RB1_NO1_ID)
+   set_reg_value(RB1_1_SWITCH_REGHOLDING_ADDR,1,reg_value,REGHOLDING_MODE); 
+   else
+   set_reg_value(RB1_2_SWITCH_REGHOLDING_ADDR,1,reg_value,REGHOLDING_MODE); 
+}
+
+void rm_step_wait_ew_weight()
 {
-  rm_exe_turn_on_rb1_1_switch();
+ //由传感器任务提供所需信号
 }
-else if(rb1==RB1_NO_2_ID)
+
+void rm_step_opt_rl()
 {
-  rm_exe_turn_on_rb1_2_switch();
+ uint16_t rl;
+ rl=get_reg_value( RL_REGHOLDING_ADDR,1,REGHOLDING_MODE); 
+ set_reg_value(RL_CONTROL_REGHOLDING_ADDR, 1,rl,REGHOLDING_MODE);
 }
-event_bits= xEventGroupWaitBits(rm_sync_event_hdl,RM_EXE_RUN_GET_RW_OK_EVT|RM_EXE_PAUSE_EVT,pdTRUE,pdFALSE,oSWaitForever);
-if(event_bits & RM_EXE_PAUSE_EVT)
+void rm_step_opt_rm_motor(uint16_t reg_value)
 {
-xEventGroupWaitBits(rm_sync_event_hdl,RM_EXE_START_EVT,pdTRUE,pdFALSE,oSWaitForever);
+ set_reg_value(RM_MOTOR_SWITCH_REGHOLDING_ADDR, 1,reg_value,REGHOLDING_MODE); 
 }
-}while(!(event_bits & RM_EXE_RUN_GET_RW_OK_EVT));
 
-
-
-
-
-
-
+void rm_step_opt_rb2(uint16_t reg_value)
+{
+ set_reg_value(RB2_SWITCH_REGHOLDING_ADDR, 1,reg_value,REGHOLDING_MODE);  
 }
+
+void rm_step_opt_oh_door(uint16_t reg_value)
+{
+ set_reg_value(OH_DOOR_SWITCH_REGHOLDING_ADDR, 1,reg_value,REGHOLDING_MODE);  
+}
+
+
+
+
+void rice_mill_execute_sync_task(void const * argument)
+{
+    
+while(1)
+{
+ rm_mill_opt_complete();//wait
+ EventBits_t xEventGroupClearBits( EventGroupHandle_t xEventGroup, const EventBits_t uxBitsToClear ) 
+
+ rm_step_set_ew_threshold();
+ event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT|RM_STEP_SET_EW_THRESHOLD_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//等待出米重量设置完成
+ if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_EXE_EW_SET_OK_EVT))//timeout or error
+ {
+  rm_mill_shutdown();
+ }
+
+ rm_step_opt_rb1(REG_VALUE_SWITCH_ON);
+ event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_OPEN_RB1_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//一级仓打开到位
+ if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_OPEN_RB1_OK_EVT))//timeout
+ {
+  rm_mill_shutdown();  
+  continue;
+ }
  
-}
-
-
-
-
-}
-
+ rm_step_wait_ew_weight();//等待米到达重量
+ event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_WAIT_RW_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//达到米重
+ if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_WAIT_RW_OK_EVT))//timeout
+ {
+  rm_mill_shutdown();
+ }
  
- osSignalSet( rm_execute_thread_handle,RM_FAULT_CODE_SETUP_EVENT);  
+ rm_step_opt_rb1(REG_VALUE_SWITCH_OFF);
+ event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_CLOSE_RB1_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//一级仓关闭到位
+ if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_CLOSE_RB1_OK_EVT))//timeout
+ {
+  rm_mill_shutdown();
+ }
  
+ rm_step_opt_rl();
+ event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_OPT_RL_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//分度调节器到位
+ if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_OPT_RL_OK_EVT))//timeout
+ {
+  rm_mill_shutdown();
+ }
+ 
+ rm_step_opt_rm_motor(REG_VALUE_SWITCH_ON);
+ osDelay(1000);//wait 1 s
+ rm_step_opt_rb2(REG_VALUE_SWITCH_ON);
+ event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_OPEN_RB2_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//
+ if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_OPEN_RB1_OK_EVT))//timeout
+ {
+  rm_mill_shutdown();
+ }
+ 
+  event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_RL_MOTOR_TIME_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//
+ if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_RL_MOTOR_TIME_OK_EVT))//timeout
+ {
+  rm_mill_shutdown();
+ }
+ rm_step_opt_rm_motor(REG_VALUE_SWITCH_OFF);
+ rm_step_opt_rb2(REG_VALUE_SWITCH_OFF);
+ event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_CLOSE_RB2_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//
+ if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_CLOSE_RB2_OK_EVT))//timeout
+ {
+  rm_mill_shutdown();
+ }
+ 
+ rm_step_opt_oh_door(REG_VALUE_SWITCH_ON);
+ event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_OPEN_OH_DOOR_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//
+ if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_OPEN_OH_DOOR_OK_EVT))//timeout
+ {
+  rm_mill_shutdown();
+ }
+ 
+ rm_step_opt_oh_door(REG_VALUE_SWITCH_OFF);
+ event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_CLOSE_OH_DOOR_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//
+ if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_CLOSE_OH_DOOR_OK_EVT))//timeout
+ {
+  rm_mill_shutdown();
+ }
+ 
+ }
+}
 
- 
-  g_rm_status=RM_STATUS_TURN_ON;
-  
-}
-}
+
+
+
 
 void rm_exe_turn_on_rm()
 {
