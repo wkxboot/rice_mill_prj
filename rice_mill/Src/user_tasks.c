@@ -132,28 +132,58 @@ void communication_with_ew_task(void const * argument)
   
 }
 
-void sensor_info_collect_task(void const * argument)
+void sensor_info_task(void const * argument)
 {
+uint32_t fault_code;
 uint16_t t,rh;
 /* 温湿度传感器*/
-t=bsp_get_temperature();
-rh=bsp_get_relative_humidity();
+t=BSP_get_temperature();
+rh=BSP_get_relative_humidity();
 
 if(TEM_MAX >=t && t>= TEM_MIN)
-{
+{ 
   set_reg_value( RB1_1_TEMPERATURE_REGINPUT_ADDR,1, t,REGINPUT_MODE);
+  if(t > TEM_WARNING)
+  set_rm_fault_code(ERROR_CODE_RB1_OT);
 }
-else
-{
-  set_reg_value( RB1_1_TEMPERATURE_REGINPUT_ADDR,1, t,REGINPUT_MODE);
-}
+
 if(RH_MAX >=rh || rh >= RH_MIN)
 {
- set_reg_value( RB1_1_RH_REGINPUT_ADDR,1, rh);   
+ set_reg_value( RB1_1_RH_REGINPUT_ADDR,1, rh,REGINPUT_MODE);
+ if(rh > RH_WARNING)
+  set_rm_fault_code(ERROR_CODE_RB1_OTH); 
 }
- 
+/*1号米仓空检查*/
 
+if(BSP_rb1_is_empty()==BSP_OK)
+{
+  set_rm_fault_code(ERROR_CODE_RB1_1_EMPTY); 
+}
+ /*2号米仓空检查*/
 
+if(BSP_rb2_is_empty()==BSP_OK)
+{
+  set_rm_fault_code(ERROR_CODE_RB1_2_EMPTY); 
+}
+/*重量检查*/
+/*1级米仓阀门电机位置赌转检查*/
+
+if(BSP_rb1_is_no1_turn_on()==BSP_OK || 
+   BSP_rb1_is_no2_turn_on()==BSP_OK ||
+   BSP_rb1_is_turn_off()==BSP_OK    ||
+   BSP_rb1_is_block()==BSP_OK)
+{
+ status= osMessagePut(rm_opt_cmd_queue_handle ,CMD_PWR_DWN_RB1_SWITCH,0);
+ if(BSP_rb1_is_block()==BSP_OK)
+ {
+  set_rm_fault_code(ERROR_CODE_RB1_SWITCH_FAULT);   
+ }
+}
+
+  fault_code= get_rm_fault_code();
+  if(!(fault_code & ERROR_CODE_RB1_1_EMPTY))
+  set_rm_fault_code(ERROR_CODE_RB1_1_EMPTY); 
+}
 
 
 
@@ -449,9 +479,9 @@ void rm_rb1_switch_asyn_task(void const * argument)
 }
 
 /*
- * 碾米机动作异步命令执行任务
+ * 碾米机动作异步任务
  */
-void rice_mill_execute_asyn_task(void const * argument)
+void rice_mill_asyn_task(void const * argument)
 {
  osEvent event;
  while(1)
@@ -465,91 +495,100 @@ void rice_mill_execute_asyn_task(void const * argument)
  switch(event.value.v)
  {
  case CMD_TURN_ON_RM:
- rm_exe_turn_on_rm();  
+ rm_turn_on_rm();  
  break;   
  case CMD_TURN_OFF_RM:
- rm_exe_turn_off_rm();    
+ rm_turn_off_rm();    
  break;   
  case CMD_RB1_SELECT_NO1:
- rm_exe_rb1_select_no1();  
+ rm_rb1_select_no1();  
  break;   
  case CMD_RB1_SELECT_NO2:
- rm_exe_rb1_select_no2();    
+ rm_rb1_select_no2();    
  break;
  case CMD_SET_RW_VALUE:
- rm_exe_set_rw_value();    
+ rm_set_rw_value();    
  break;   
- case CMD_SET_RL_0:
- rm_exe_set_rl_0();  
+ case CMD_SET_RL_0://复位
+ rm_set_rl_0();  
  break;
  case CMD_SET_RL_5:
- rm_exe_set_rl_5();    
+ rm_set_rl_5();    
  break;   
  case CMD_SET_RL_7:
- rm_exe_set_rl_7();    
+ rm_set_rl_7();    
  break;
  case CMD_SET_RL_9:
- rm_exe_set_rl_9();   
+ rm_set_rl_9();   
  break;   
  case CMD_SET_RM_FAULT_CODE:
- rm_exe_set_rm_fault_code(); 
+ rm_set_rm_fault_code(); 
  break;
  case CMD_TURN_ON_RM_MOTOR:
- rm_exe_turn_on_rm_motor();  
+ rm_turn_on_rm_motor();  
  break;   
  case CMD_TURN_OFF_RM_MOTOR:
- rm_exe_turn_off_rm_motor();    
+ rm_turn_off_rm_motor();    
  break;
  case CMD_TURN_ON_RB1_1_SWITCH:
- rm_exe_turn_on_rb1_1_switch();    
+ rm_turn_on_rb1_1_switch();    
  break;   
  case CMD_TURN_OFF_RB1_1_SWITCH:
- rm_exe_turn_off_rb1_1_switch();  
+ rm_turn_off_rb1_1_switch();  
  break;
  case CMD_TURN_ON_RB1_2_SWITCH:
- rm_exe_turn_on_rb1_2_switch();   
+ rm_turn_on_rb1_2_switch();   
  break;
  case CMD_TURN_OFF_RB1_2_SWITCH:
- rm_exe_turn_off_rb1_2_switch();  
+ rm_turn_off_rb1_2_switch();  
  break;   
+ case CMD_PWR_DWN_RB1_SWITCH://断电1级米仓电机
+ rm_pwr_dwn_rb1_switch();  
+ break;  
  case CMD_TURN_ON_RB2_SWITCH:
- rm_exe_turn_on_rb2_switch();   
+ rm_turn_on_rb2_switch();   
  break;
  case CMD_TURN_OFF_RB2_SWITCH:
- rm_exe_turn_off_rb2_switch  
+ rm_turn_off_rb2_switch  
  break;   
+ case CMD_PWR_DWN_RB2_SWITCH://断电2级米仓电机
+ rm_pwr_dwn_rb2_switch  
+ break; 
  case CMD_TURN_ON_UV_LAMP:
- rm_exe_turn_on_uv_lamp();  
+ rm_turn_on_uv_lamp();  
  break;   
  case CMD_TURN_OFF_UV_LAMP:
- rm_exe_turn_off_uv_lamp(); 
+ rm_turn_off_uv_lamp(); 
  break;
  case CMD_TURN_ON_E_LAMP:
- rm_exe_turn_on_e_lamp();   
+ rm_turn_on_e_lamp();   
  break;
  case CMD_TURN_OFF_E_LAMP:
- rm_exe_turn_off_e_lamp(); 
+ rm_turn_off_e_lamp(); 
  break;   
  case CMD_TURN_ON_OH_DOOR:
- rm_exe_turn_on_oh_door();  
+ rm_turn_on_oh_door();  
  break;
  case CMD_TURN_OFF_OH_DOOR:
- rm_exe_turn_off_oh_door();  
+ rm_turn_off_oh_door();  
  break;   
+ case CMD_PWR_DWN_OH_DOOR:////断电升降门电机
+ rm_pwr_dwn_oh_door();  
+ break; 
  case CMD_ENABLE_REMOVE_TARE:
- rm_exe_enable_remove_tare();  
+ rm_enable_remove_tare();  
  break; 
  case CMD_DISABLE_REMOVE_TARE:
- rm_exe_disable_remove_tare();  
+ rm_disable_remove_tare();  
  break;
  case CMD_ENABLE_ZERO_CLEARING:
- rm_exe_enable_zero_clearing();   
+ rm_enable_zero_clearing();   
  break;   
  case CMD_DISABLE_ZERO_CLEARING:
- rm_exe_disable_zero_clearing(); 
+ rm_disable_zero_clearing(); 
  break; 
  case CMD_SET_EW_THRESHOLD_VALUE:
- rm_exe_set_ew_value(); 
+ rm_set_ew_value(); 
  break; 
  }
  }
@@ -643,22 +682,22 @@ void rm_step_opt_oh_door(uint16_t reg_value)
 
 
 
-void rice_mill_execute_sync_task(void const * argument)
+void rice_mill_sync_task(void const * argument)
 {
     
 while(1)
 {
- rm_mill_opt_complete();//wait
- EventBits_t xEventGroupClearBits( EventGroupHandle_t xEventGroup, const EventBits_t uxBitsToClear ) 
+ rm_mill_opt_complete();//等待开始
+ //EventBits_t xEventGroupClearBits( EventGroupHandle_t xEventGroup, const EventBits_t uxBitsToClear ) 
 
- rm_step_set_ew_threshold();
+ rm_step_set_ew_threshold();//设置出米重量
  event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT|RM_STEP_SET_EW_THRESHOLD_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//等待出米重量设置完成
  if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_EXE_EW_SET_OK_EVT))//timeout or error
  {
   rm_mill_shutdown();
  }
 
- rm_step_opt_rb1(REG_VALUE_SWITCH_ON);
+ rm_step_opt_rb1(REG_VALUE_SWITCH_ON);//打开对应的1级仓 1号或者2号
  event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_OPEN_RB1_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//一级仓打开到位
  if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_OPEN_RB1_OK_EVT))//timeout
  {
@@ -666,57 +705,63 @@ while(1)
   continue;
  }
  
- rm_step_wait_ew_weight();//等待米到达重量
- event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_WAIT_RW_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//达到米重
+ rm_step_wait_ew_weight();//启动米重感知
+ event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_WAIT_RW_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//等待米重达标
  if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_WAIT_RW_OK_EVT))//timeout
  {
   rm_mill_shutdown();
  }
  
  rm_step_opt_rb1(REG_VALUE_SWITCH_OFF);
- event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_CLOSE_RB1_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//一级仓关闭到位
+ event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_CLOSE_RB1_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//等待一级仓关闭到位
  if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_CLOSE_RB1_OK_EVT))//timeout
  {
   rm_mill_shutdown();
  }
  
- rm_step_opt_rl();
- event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_OPT_RL_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//分度调节器到位
+ rm_step_opt_rl();//调节对应的碾米分度值
+ event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_OPT_RL_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//等待分度调节器到位
  if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_OPT_RL_OK_EVT))//timeout
  {
   rm_mill_shutdown();
  }
  
- rm_step_opt_rm_motor(REG_VALUE_SWITCH_ON);
- osDelay(1000);//wait 1 s
- rm_step_opt_rb2(REG_VALUE_SWITCH_ON);
- event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_OPEN_RB2_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//
+ rm_step_opt_rm_motor(REG_VALUE_SWITCH_ON);//打开碾米电机
+ osDelay(1000);//等待 1 s 电机稳定转动
+ rm_step_opt_rb2(REG_VALUE_SWITCH_ON);//打开2级仓门
+ event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_OPEN_RB2_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//等待打开2级仓门到位
  if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_OPEN_RB1_OK_EVT))//timeout
  {
   rm_mill_shutdown();
  }
  
-  event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_RL_MOTOR_TIME_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//
- if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_RL_MOTOR_TIME_OK_EVT))//timeout
+  event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_RL_MOTOR_TIME_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//等待碾米时间到
+ if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_RL_MOTOR_TIME_OK_EVT))//
  {
   rm_mill_shutdown();
  }
- rm_step_opt_rm_motor(REG_VALUE_SWITCH_OFF);
- rm_step_opt_rb2(REG_VALUE_SWITCH_OFF);
- event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_CLOSE_RB2_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//
+ rm_step_opt_rm_motor(REG_VALUE_SWITCH_OFF);//关闭碾米电机马达
+ rm_step_opt_rb2(REG_VALUE_SWITCH_OFF);//关闭2级仓
+ event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_CLOSE_RB2_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//等待2级仓关闭到位
  if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_CLOSE_RB2_OK_EVT))//timeout
  {
   rm_mill_shutdown();
  }
  
- rm_step_opt_oh_door(REG_VALUE_SWITCH_ON);
- event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_OPEN_OH_DOOR_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//
+ rm_step_opt_oh_door(REG_VALUE_SWITCH_ON);//打开升降门
+ event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_OPEN_OH_DOOR_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//等待门上升到位
  if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_OPEN_OH_DOOR_OK_EVT))//timeout
  {
   rm_mill_shutdown();
  }
+ rm_step_wait_take_rice_away();//启动米移走感知
+ event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_TAKE_RICE_AWAY_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//等待米被拿走
+ if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_TAKE_RICE_AWAY_OK_EVT))//timeout or error
+ {
+  rm_mill_shutdown();
+ }
  
- rm_step_opt_oh_door(REG_VALUE_SWITCH_OFF);
+ rm_step_opt_oh_door(REG_VALUE_SWITCH_OFF);//关闭升降门
  event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_CLOSE_OH_DOOR_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//
  if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_CLOSE_OH_DOOR_OK_EVT))//timeout
  {
@@ -730,30 +775,211 @@ while(1)
 
 
 
-void rm_exe_turn_on_rm()
+void rm_turn_on_rm()
 {
-
+  osStatus status;
+  if(osThreadIsSuspended( rm_sync_task_id)==osOK)
+  {
+   status=osThreadResume(rm_sync_task_id);
+   if(status==osOK)
+   {
+    APP_LOG_DEBUG("resume rm sync task success!\r\n");
+   }
+   else
+   {
+    APP_LOG_DEBUG("resume rm sync task fail!\r\n"); 
+   }
+  }
 }
 
-void rm_exe_turn_off_rm()
-{
-  g_rm_status=RM_STATUS_TURN_OFF; 
-  osMessagePut(rm_opt_cmd_queue_handle ,CMD_DISABLE_ZERO_CLEARING,0);
+void rm_turn_off_rm()
+{  
+  osStatus status;
+  if(osThreadIsSuspended( rm_sync_task_id)!=osOK)
+  {
+   status=osThreadSuspend (rm_sync_task_id);
+   if(status==osOK)
+   {
+    APP_LOG_DEBUG("suspend rm sync task success!\r\n");
+   }
+   else
+   {
+    APP_LOG_DEBUG("suspend rm sync task fail!\r\n"); 
+   }
+  }
 }
 
-void rm_exe_turn_on_rb1_1_switch()
+static void rm_rb1_select_no1()
 {
- osTimerStart (rm_exe_timeout_timer_handle,RM_EXE_TIMER_TIMEOUT_VALUE);//打开超时定时器
- BSP_motor_turn_on_rb1_1();   
+}
+static void rm_rb1_select_no2()
+{ 
 }
 
-void rm_exe_turn_off_rb1_1_switch()
+static void rm_set_rw_value()
+{ 
+}
+   
+   
+static void rm_set_rl_common(uint16_t tar_steps);
 {
- osTimerStop (rm_exe_timeout_timer_handle);//关闭超时定时器
- BSP_motor_turn_off_rb1_1();  
-
- if(g_rm_status==RM_STATUS_TURN_ON)
+ uint16_t steps;
+ 
+ if(tar_steps==RL_MOTOR_STEPS_FOR_RL0)//0点特殊处理
  {
- rm_(rm_opt_cmd_queue_handle ,CMD_TURN_ON_RM_MOTOR,0); //准备下一步 开启碾米电机
+  if( BSP_rl_is_in_rst_pos()!=RM_OK)
+  {
+  BSP_rl_motor_run(RL_MOTOR_DIR_POSITIVE,RL_MOTOR_STEPS_FOR_RL0);//向复位点运行，到位后发送到位信号
+  } 
+  else
+  {
+  APP_LOG_DEBUG("rl has in rst,ignore!");  
+  } 
  }
+ else
+ {
+ steps=BSP_rl_get_motor_steps(); 
+ if(steps < tar_steps)
+ BSP_rl_motor_run(RL_MOTOR_DIR_POSITIVE,tar_steps-steps);//向目标点运行，到位后发送到位信号 
+ else if(steps > tar_steps)
+ {
+ BSP_rl_motor_run(RL_MOTOR_DIR_NEGATIVE,steps-tar_steps);//向目标点运行，到位后发送到位信号   
+ }
+ else
+ {
+ APP_LOG_WARNING("rl on right pos,ignore!");
+ }
+ }
+}
+   
+static void rm_set_rl_0()
+{
+  APP_LOG_DEBUG("start set rl 0 reset!\r\n");
+  rm_set_rl_common(RL_MOTOR_STEPS_FOR_RL0);
+}
+
+static void rm_set_rl_5()
+{
+  APP_LOG_DEBUG("start set rl 5!\r\n");
+  rm_set_rl_common(RL_MOTOR_STEPS_FOR_RL5);
+}
+static void rm_set_rl_7()
+{
+APP_LOG_DEBUG("start set rl 7!\r\n");
+rm_set_rl_common(RL_MOTOR_STEPS_FOR_RL7);
+}
+
+static void rm_set_rl_9()
+{
+rm_set_rl_common(RL_MOTOR_STEPS_FOR_RL9);
+}
+
+static void rm_set_rm_fault_code()
+{
+ xEventGroupSetBits(rm_sync_event_hdl,RM_STEP_HALT_EVT );//发送错误信号
+}
+
+static void rm_turn_on_rm_motor()
+{
+  BSP_rm_motor_pwr_on_dwn_motor(BSP_PWR_DWN);
+}
+
+static void rm_turn_off_rm_motor()
+{
+  BSP_rm_motor_pwr_on_dwn(BSP_PWR_ON);
+}
+
+static void rm_turn_on_rb1_1_switch()
+{
+BSP_rb1_motor_pwr(BSP_PWR_ON_NEGATIVE);
+}
+
+static void rm_turn_off_rb1_1_switch()
+{
+BSP_rb1_motor_pwr(BSP_PWR_ON_POSITIVE);
+}
+
+static void rm_turn_on_rb1_2_switch()
+{
+BSP_rb1_motor_pwr(BSP_PWR_ON_POSITIVE);
+}
+
+static void rm_turn_off_rb1_2_switch()
+{
+BSP_rb1_motor_pwr(BSP_PWR_ON_NEGATIVE); 
+}
+static void rm_pwr_dwn_rb1_switch()
+{
+ BSP_rb1_motor_pwr(BSP_PWR_DWN);
+}
+
+static void rm_turn_on_rb2_switch()
+{
+ BSP_rb2_motor_pwr(BSP_PWR_ON_POSITIVE);
+}
+
+static void rm_turn_off_rb2_switch()
+{
+ BSP_rb2_motor_pwr(BSP_PWR_ON_NEGATIVE);
+}
+//断电2级米仓电机
+static void rm_pwr_dwn_rb2_switch()
+{
+BSP_rb2_motor_pwr(BSP_PWR_DWN); 
+}
+
+static void rm_turn_on_uv_lamp()
+{
+ BSP_uv_lump_pwr(BSP_PWR_ON);  
+}
+static void rm_turn_off_uv_lamp()
+{
+ BSP_uv_lump_pwr(BSP_PWR_DWN);   
+}
+
+static void rm_turn_on_e_lamp()
+{
+BSP_e_lump_pwr(BSP_PWR_ON);    
+}
+
+static void rm_turn_off_e_lamp()
+{
+BSP_e_lump_pwr(BSP_PWR_DWN);  
+}
+
+static void rm_turn_on_oh_door()
+{
+ BSP_oh_door_motor_pwr( BSP_PWR_ON_POSITIVE);
+}
+static void rm_turn_off_oh_door()
+{
+ BSP_oh_door_motor_pwr( BSP_PWR_ON_POSITIVE); 
+}
+//断电升降门电机
+static void  rm_pwr_dwn_oh_door()
+{
+ BSP_oh_door_motor_pwr( BSP_PWR_DWN);
+}
+ break; 
+
+static void rm_enable_remove_tare()
+{
+ MB_send(); 
+}
+
+static void rm_disable_remove_tare()
+{
+}
+static void rm_enable_zero_clearing()
+{
+ rm_zero_clearing(); 
+}
+
+static void rm_disable_zero_clearing()
+{
+}
+
+static rm_set_ew_value()
+{
+MB_send(); 
 }
