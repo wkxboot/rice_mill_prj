@@ -151,7 +151,7 @@ if(RH_MAX >=rh || rh >= RH_MIN)
 {
  set_reg_value( RB1_1_RH_REGINPUT_ADDR,1, rh,REGINPUT_MODE);
  if(rh > RH_WARNING)
-  set_rm_fault_code(ERROR_CODE_RB1_OTH); 
+ set_rm_fault_code(ERROR_CODE_RB1_OTH); 
 }
 /*1号米仓空检查*/
 
@@ -165,318 +165,85 @@ if(BSP_rb2_is_empty()==BSP_OK)
 {
   set_rm_fault_code(ERROR_CODE_RB1_2_EMPTY); 
 }
-/*重量检查*/
-/*1级米仓阀门电机位置赌转检查*/
 
-if(BSP_rb1_is_no1_turn_on()==BSP_OK || 
-   BSP_rb1_is_no2_turn_on()==BSP_OK ||
-   BSP_rb1_is_turn_off()==BSP_OK    ||
-   BSP_rb1_is_block()==BSP_OK)
+/*1级米仓阀门电机位置/赌转检查*/
+
+if(BSP_rb1_is_no1_turn_on()==BSP_OK)
 {
- status= osMessagePut(rm_opt_cmd_queue_handle ,CMD_PWR_DWN_RB1_SWITCH,0);
+ set_reg_value( RB1_1_SWITCH_REGHOLDING_ADDR,1,REG_VALUE_SWITCH_ON,REGHOLDING_MODE);
+ xEventGroupSetBits(sync_event_hdl,SYNC_OPEN_RB1_OK_EVT );
+}
+ if(BSP_rb1_is_no2_turn_on()==BSP_OK)
+ {
+ set_reg_value( RB1_2_SWITCH_REGHOLDING_ADDR,1,REG_VALUE_SWITCH_ON,REGHOLDING_MODE);
+ xEventGroupSetBits( sync_event_hdl,RM_STEP_OPEN_RB1_OK_EVT );
+ }
+ if(BSP_rb1_is_turn_off()==BSP_OK)
+ {
+  set_reg_value( RB1_1_SWITCH_REGHOLDING_ADDR,1,REG_VALUE_SWITCH_OFF,REGHOLDING_MODE);
+  set_reg_value( RB1_2_SWITCH_REGHOLDING_ADDR,1,REG_VALUE_SWITCH_OFF,REGHOLDING_MODE);
+  xEventGroupSetBits(  sync_event_hdl,RM_STEP_CLOSE_RB1_OK_EVT );
+ }
+
  if(BSP_rb1_is_block()==BSP_OK)
  {
+  set_reg_value( RB1_1_SWITCH_REGHOLDING_ADDR,1,REG_VALUE_SWITCH_OFF,REGHOLDING_MODE);
+  set_reg_value( RB1_2_SWITCH_REGHOLDING_ADDR,1,REG_VALUE_SWITCH_OFF,REGHOLDING_MODE);
   set_rm_fault_code(ERROR_CODE_RB1_SWITCH_FAULT);   
  }
-}
 
-  fault_code= get_rm_fault_code();
-  if(!(fault_code & ERROR_CODE_RB1_1_EMPTY))
-  set_rm_fault_code(ERROR_CODE_RB1_1_EMPTY); 
-}
-
-
-
-}
-
-
-/*
- *碾米机命令解析分发任务
- */
-
-void cmd_parse_dispatch_task(void const * argument)
+/*2级仓阀门位置检测*/
+if(BSP_rb2_is_turn_on()==BSP_OK)
 {
- osEvent events;
- osStatus status;
- uint32_t reg_value;
+  set_reg_value( RB2_SWITCH_REGHOLDING_ADDR,1,REG_VALUE_SWITCH_ON,REGHOLDING_MODE);
+  xEventGroupSetBits(  sync_event_hdl,RM_STEP_OPEN_RB2_OK_EVT );
+}
+if(BSP_rb2_is_turn_off()==BSP_OK)
+{
+  set_reg_value( RB2_SWITCH_REGHOLDING_ADDR,1,REG_VALUE_SWITCH_OFF,REGHOLDING_MODE);
+  xEventGroupSetBits(  sync_event_hdl,RM_STEP_CLOSE_RB2_OK_EVT );
+}
+if(BSP_rb2_is_block()==BSP_OK)
+{
+ set_reg_value( RB2_SWITCH_REGHOLDING_ADDR,1,REG_VALUE_SWITCH_BLOCK,REGHOLDING_MODE);
+ set_rm_fault_code(ERROR_CODE_RB2_SWITCH_FAULT);   
+}
+
+/*实时米重*/
+if(rm_w_obtain_interval==RM_W_OBTAIN_INTERVAL)
+MB_send(get_rm_weight);
+
+uint16_t rw_cur,rw_tar;
+uint8_t r
+rw_cur=get_reg_value(EW_NET_WEIGHT_REGINPUT_ADDR,1,REGINPUT_MODE);
+rw_tar=get_reg_value(RW_REGHOLDING_ADDR,1,REGHOLDING_MODE);
+
+if(BSP_ew_is_signal_ok() && rw_cur >= rw_tar)
+ xEventGroupSetBits(rm_sync_event_hdl,RM_STEP_WAIT_RW_OK_EVT );
+
+/*升降门位置检测*/
+if(BSP_oh_door_is_turn_on())
+{
+ set_reg_value( OH_DOOR_SWITCH_REGHOLDING_ADDR,1,REG_VALUE_SWITCH_ON,REGHOLDING_MODE);
+ xEventGroupSetBits(sync_event_hdl,RM_STEP_OPEN_OH_DOOR_OK_EVT );
+}
+
+if(BSP_oh_door_is_turn_off())
+{
+ set_reg_value( OH_DOOR_SWITCH_REGHOLDING_ADDR,1,REG_VALUE_SWITCH_OFF,REGHOLDING_MODE);
+ xEventGroupSetBits(sync_event_hdl,RM_STEP_CLOSE_OH_DOOR_OK_EVT );
+}
+
+if(BSP_oh_door_is_block())
+{
+ set_reg_value( OH_DOOR_SWITCH_REGHOLDING_ADDR,1,REG_VALUE_SWITCH_BLOCK,REGHOLDING_MODE);
  
-while(1)
-{
- events= osSignalWait(ALL_RM_EVENT,oSWaitForever);
-if(events.status!= osEventSignal)
-{
- continue; 
-}
-
-if(events.value.signals & RM_SWITCH_SETUP_EVENT)
-{
- reg_value= get_reg_value(RM_SWITCH_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
- if(reg_value==REG_VALUE_SWITCH_ON )
- {
-   reg_value= get_rm_fault_code();
-   if(!reg_value)
-   {
-   status= osMessagePut(rm_opt_cmd_queue_handle ,CMD_TURN_ON_RM,0);
-   APP_LOG_DEBUG("RM_SWITCH_SETUP_EVENT  ON!status:%d\r\n",status);
-   }
-   else
-   {
-   APP_LOG_DEBUG("RM_SWITCH_SETUP_EVENT IGNORE!\r\n");  
-   }
- }
- else if(reg_value==REG_VALUE_SWITCH_OFF)
- {
-   status= osMessagePut (rm_opt_cmd_queue_handle ,CMD_TURN_OFF_RM,0);
-   APP_LOG_DEBUG("RM_SWITCH_SETUP_EVENT  OFF!status:%d\r\n",status);
- }
-}
-
-
-if(events.value.signals & RB1_SELECTION_EVENT)
-{
-   reg_value= get_reg_value(RB1_SELECTION_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
-   APP_LOG_DEBUG("RB1_SELECTION_EVENT!\r\n");
-   APP_LOG_DEBUG("reg_value:%d\r\n",reg_value);
-   if(reg_value==RB1_NO_1_ID)
-   {
-   status= osMessagePut (rm_opt_cmd_queue_handle ,CMD_RB1_SELECT_NO1,0);
-   APP_LOG_DEBUG("rb1 select NO1!status:%d\r\n",status);
-   }
-   else if(reg_value==RB1_NO_2_ID)
-   {
-   status= osMessagePut (rm_opt_cmd_queue_handle ,CMD_RB1_SELECT_NO2,0);
-   APP_LOG_DEBUG("rb1 select NO2!status:%d\r\n",status);
-   }
-}
-
-if(events.value.signals & RW_SETUP_EVENT)
-{
-   reg_value= get_reg_value(RW_REGHOLDING_ADDR, 2,REGHOLDING_MODE);
+ set_rm_fault_code(ERROR_CODE_OH_DOOR_MOTOR_BLOCK); 
+ 
    
-   APP_LOG_DEBUG("RW_SETUP_EVENT!\r\n");
-   APP_LOG_DEBUG("reg_value:%d\r\n",reg_value);
-   
-   if(reg_value>RW_VALUE_MIN && reg_value<RW_VALUE_MAX)
-   {
-   status= osMessagePut (rm_opt_cmd_queue_handle ,CMD_SET_RW_VALUE,0);
-   APP_LOG_DEBUG("weight is valied! status:%d\r\n",status);
-   }
-} 
-if(events.value.signals & RL_SETUP_EVENT)
-{
-   uint16_t cmd;
-   reg_value= get_reg_value(RL_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
-
-   APP_LOG_DEBUG("RL_SETUP_EVENT!\r\n");
-   APP_LOG_DEBUG("reg_value:%d\r\n",reg_value);
-}
-if(events.value.signals & RL_CONTROL_EVENT)
-{
-    uint16_t cmd;
-   reg_value= get_reg_value(RL_CONTROL_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
-   
-   APP_LOG_DEBUG("RL_SETUP_EVENT!\r\n");
-   APP_LOG_DEBUG("reg_value:%d\r\n",reg_value);
-   
-   if(reg_value==RL_VALUE_0)
-   {
-     cmd=CMD_SET_RL_0;
-   }
-   else if(reg_value==RL_VALUE_5)
-   {
-    cmd=CMD_SET_RL_5; 
-   }
-   else if(reg_value==RL_VALUE_7)
-   {
-     cmd=CMD_SET_RL_7;  
-   }
-   else if(reg_value==RL_VALUE_9)
-   {
-     cmd=CMD_SET_RL_9;  
-   }
-   status= osMessagePut (rm_opt_cmd_queue_handle ,cmd,0);
-   APP_LOG_DEBUG("cmd is valied! status:%d\r\n",status);  
-   
-}
-if(events.value.signals & RM_FAULT_CODE_SETUP_EVENT)
-{
-   reg_value=  get_rm_fault_code();
-   
-   APP_LOG_DEBUG("RM_FAULT_CODE_SETUP_EVENT!\r\n");
-   APP_LOG_DEBUG("reg_value:%d\r\n",reg_value);
-   
-   if(reg_value)
-   {
-   set_reg_value(RM_SWITCH_REGHOLDING_ADDR, 1,REG_VALUE_SWITCH_OFF,REGHOLDING_MODE); //修改值为REG_VALUE_SWITCH_OFF
-   APP_LOG_DEBUG("internal turn off rm_switch as rm fault!\r\n");
-   }
-   status= osMessagePut (rm_opt_cmd_queue_handle ,CMD_SET_RM_FAULT_CODE,0);
-   APP_LOG_DEBUG("set rm fault code! status:%d\r\n",status);  
-}
-
-if(events.value.signals & RM_MOTOR_SWITCH_SETUP_EVENT)
-{
-  reg_value= get_reg_value(RM_MOTOR_SWITCH_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
-  APP_LOG_DEBUG("RM_MOTOR_SWITCH_SETUP_EVENT!\r\n");
-  APP_LOG_DEBUG("reg_value:%d\r\n",reg_value);
- if(reg_value==REG_VALUE_SWITCH_ON )
- {
-  status= osMessagePut (rm_opt_cmd_queue_handle ,CMD_TURN_ON_RM_MOTOR,0);
-  APP_LOG_DEBUG("turn on rm motor!status:%d\r\n",status);
- }
- else if(reg_value==REG_VALUE_SWITCH_OFF)
- {
-   status= osMessagePut (rm_opt_cmd_queue_handle ,CMD_TURN_OFF_RM_MOTOR,0);
-   APP_LOG_DEBUG("turn off rm motor!status:%d\r\n",status);
- } 
-}
-if(events.value.signals & RB1_1_SWITCH_SETUP_EVENT)
-{
-  reg_value= get_reg_value(RB1_1_SWITCH_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
-  APP_LOG_DEBUG("RB1_1_SWITCH_SETUP_EVENT!\r\n");
-  APP_LOG_DEBUG("reg_value:%d\r\n",reg_value);
- if(reg_value==REG_VALUE_SWITCH_ON )
- {
-  status= osMessagePut (rm_opt_cmd_queue_handle ,CMD_TURN_ON_RB1_1_SWITCH,0);
-  APP_LOG_DEBUG("turn on rb1_1!status:%d\r\n",status);
- }
- else if(reg_value==REG_VALUE_SWITCH_OFF)
- {
-   status= osMessagePut (rm_opt_cmd_queue_handle ,CMD_TURN_OFF_RB1_1_SWITCH,0);
-   APP_LOG_DEBUG("turn off rb1_1!status:%d\r\n",status);
- }  
-}
-if(events.value.signals & RB1_2_SWITCH_SETUP_EVENT)
-{
-  reg_value= get_reg_value(RB1_2_SWITCH_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
-  APP_LOG_DEBUG("RB1_2_SWITCH_SETUP_EVENT!\r\n");
-  APP_LOG_DEBUG("reg_value:%d\r\n",reg_value);
- if(reg_value==REG_VALUE_SWITCH_ON )
- {
-  status= osMessagePut (rm_opt_cmd_queue_handle ,CMD_TURN_ON_RB1_2_SWITCH,0);
-  APP_LOG_DEBUG("turn on rm motor!status:%d\r\n",status);
- }
- else if(reg_value==REG_VALUE_SWITCH_OFF)
- {
-   status= osMessagePut (rm_opt_cmd_queue_handle ,CMD_TURN_ON_RB1_2_SWITCH,0);
-   APP_LOG_DEBUG("turn off rm motor!status:%d\r\n",status);
- } 
-}
-if(events.value.signals & RB2_SWITCH_SETUP_EVENT)
-{
-   reg_value= get_reg_value(RB2_SWITCH_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
-  APP_LOG_DEBUG("RB2_SWITCH_SETUP_EVENT!\r\n");
-  APP_LOG_DEBUG("reg_value:%d\r\n",reg_value);
- if(reg_value==REG_VALUE_SWITCH_ON )
- {
-  status= osMessagePut (rm_opt_cmd_queue_handle ,CMD_TURN_ON_RB2_SWITCH,0);
-  APP_LOG_DEBUG("turn on rb2!status:%d\r\n",status);
- }
- else if(reg_value==REG_VALUE_SWITCH_OFF)
- {
-   status= osMessagePut (rm_opt_cmd_queue_handle ,CMD_TURN_OFF_RB2_SWITCH,0);
-   APP_LOG_DEBUG("turn off rb2!status:%d\r\n",status);
- } 
-}
-if(events.value.signals & UV_LAMP_SWITCH_SETUP_EVENT)
-{
-  reg_value= get_reg_value(UV_LAMP_SWITCH_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
-  APP_LOG_DEBUG("UV_LAMP_SWITCH_SETUP_EVENT!\r\n");
-  APP_LOG_DEBUG("reg_value:%d\r\n",reg_value);
- if(reg_value==REG_VALUE_SWITCH_ON )
- {
-  status= osMessagePut (rm_opt_cmd_queue_handle ,CMD_TURN_ON_UV_LAMP,0);
-  APP_LOG_DEBUG("turn on uv lamp!status:%d\r\n",status);
- }
- else if(reg_value==REG_VALUE_SWITCH_OFF)
- {
-   status= osMessagePut (rm_opt_cmd_queue_handle ,CMD_TURN_OFF_UV_LAMP,0);
-   APP_LOG_DEBUG("turn off uv lamp!status:%d\r\n",status);
- }  
-}
-if(events.value.signals & E_LAMP_SWITCH_SETUP_EVENT)
-{
-   reg_value= get_reg_value(E_LAMP_SWITCH_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
-  APP_LOG_DEBUG("E_LAMP_SWITCH_SETUP_EVENT!\r\n");
-  APP_LOG_DEBUG("reg_value:%d\r\n",reg_value);
- if(reg_value==REG_VALUE_SWITCH_ON )
- {
-  status= osMessagePut (rm_opt_cmd_queue_handle ,CMD_TURN_ON_E_LAMP,0);
-  APP_LOG_DEBUG("turn on e lamp!status:%d\r\n",status);
- }
- else if(reg_value==REG_VALUE_SWITCH_OFF)
- {
-   status= osMessagePut (rm_opt_cmd_queue_handle ,CMD_TURN_ON_E_LAMP,0);
-   APP_LOG_DEBUG("turn off e lamp!status:%d\r\n",status);
- } 
-}
-if(events.value.signals & OH_DOOR_SWITCH_SETUP_EVENT)
-{
-  reg_value= get_reg_value(OH_DOOR_SWITCH_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
-  APP_LOG_DEBUG("OH_DOOR_SWITCH_SETUP_EVENT!\r\n");
-  APP_LOG_DEBUG("reg_value:%d\r\n",reg_value);
- if(reg_value==REG_VALUE_SWITCH_ON )
- {
-  status= osMessagePut (rm_opt_cmd_queue_handle ,CMD_TURN_ON_OH_DOOR,0);
-  APP_LOG_DEBUG("turn on rm motor!status:%d\r\n",status);
- }
- else if(reg_value==REG_VALUE_SWITCH_OFF)
- {
-   status= osMessagePut (rm_opt_cmd_queue_handle ,CMD_TURN_OFF_OH_DOOR,0);
-   APP_LOG_DEBUG("turn off rm motor!status:%d\r\n",status);
- } 
-}
-if(events.value.signals & R_TARE_SETUP_EVENT)
-{
-  reg_value= get_reg_value(R_TARE_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
-  APP_LOG_DEBUG("R_TARE_SETUP_EVENT!\r\n");
-  APP_LOG_DEBUG("reg_value:%d\r\n",reg_value);
- if(reg_value==REG_VALUE_FUNC_ENABLE )
- {
-  status= osMessagePut(rm_opt_cmd_queue_handle ,CMD_ENABLE_REMOVE_TARE,0);
-  APP_LOG_DEBUG("enable remove tare!status:%d\r\n",status);
- }
- else if(reg_value==REG_VALUE_FUNC_DISABLE )
- {
-  status= osMessagePut(rm_opt_cmd_queue_handle ,CMD_DISABLE_REMOVE_TARE,0);
-  APP_LOG_DEBUG("disable remove tare!status:%d\r\n",status); 
- }
-}
-if(events.value.signals & Z_CLEARING_SETUP_EVENT)
-{
-  reg_value= get_reg_value(Z_CLEARING_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
-  APP_LOG_DEBUG("Z_CLEARING_SETUP_EVENT!\r\n");
-  APP_LOG_DEBUG("reg_value:%d\r\n",reg_value);
- if(reg_value==REG_VALUE_FUNC_ENABLE )
- {
-  status= osMessagePut(rm_opt_cmd_queue_handle ,CMD_ENABLE_ZERO_CLEARING,0);
-  APP_LOG_DEBUG("enable z clearing!status:%d\r\n",status);
- } 
- else if(reg_value==REG_VALUE_FUNC_DISABLE )
- {
-  status= osMessagePut(rm_opt_cmd_queue_handle ,CMD_DISABLE_ZERO_CLEARING,0);
-  APP_LOG_DEBUG("disable z clearing!status:%d\r\n",status); 
- }
-}
-if(events.value.signals & EW_THRESHOLD_SETUP_EVENT)
-{
-  reg_value= get_reg_value(EW_THRESHOLD_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
-  APP_LOG_DEBUG("EW_THRESHOLD_SETUP_EVENT!\r\n");
-  APP_LOG_DEBUG("reg_value:%d\r\n",reg_value);
- if(reg_value> RW_VALUE_MIN && reg_value< RW_VALUE_MAX )
- {
-  status= osMessagePut(rm_opt_cmd_queue_handle ,CMD_SET_EW_THRESHOLD_VALUE,0);
-  APP_LOG_DEBUG("set ew threshold!status:%d\r\n",status);
- }  
-}
 }
 }
 
-void rm_rb1_switch_asyn_task(void const * argument)
-{
-  osSignalWait(RM_RB1_1_OPEN_EVT|RM_RB1_1_CLOSE_EVT|RM_RB1_2_OPEN_EVT|RM_RB1_2_CLOSE_EVT,oSWaitForever);//等待碾米开始
-  
-}
 
 /*
  * 碾米机动作异步任务
@@ -653,12 +420,12 @@ void rm_step_opt_rb1(uint16_t reg_value)
    set_reg_value(RB1_2_SWITCH_REGHOLDING_ADDR,1,reg_value,REGHOLDING_MODE); 
 }
 
-void rm_step_wait_ew_weight()
+static void sync_enable_ew_weight_signal()
 {
  //由传感器任务提供所需信号
 }
 
-void rm_step_opt_rl()
+static void sync_set_rl()
 {
  uint16_t rl;
  rl=get_reg_value( RL_REGHOLDING_ADDR,1,REGHOLDING_MODE); 
@@ -681,92 +448,141 @@ void rm_step_opt_oh_door(uint16_t reg_value)
 
 
 
-
 void rice_mill_sync_task(void const * argument)
 {
+ static uint8_t exe_times=0;
+ static uint8_t rice_is_take_away=BSP_NO;
     
 while(1)
 {
- rm_mill_opt_complete();//等待开始
+ sync_complete();//等待开始
  //EventBits_t xEventGroupClearBits( EventGroupHandle_t xEventGroup, const EventBits_t uxBitsToClear ) 
+ do
+{
+ sync_set_rl();//调节对应的碾米分度值
+ event_bits=xEventGroupWaitBits(rm_sync_event_hdl,SYNC_HALT_EVT |SYNC_SET_RL_OK_EVT,pdTRUE,pdFALSE,osWaitForever );//等待分度调节器到位
+ if(event_bits & SYNC_HALT_EVT)//error
+ {
+  rm_mill_shutdown();
+ }
+}while(!(event_bits & SYNC_SET_RL_OK_EVT))
 
- rm_step_set_ew_threshold();//设置出米重量
- event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT|RM_STEP_SET_EW_THRESHOLD_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//等待出米重量设置完成
- if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_EXE_EW_SET_OK_EVT))//timeout or error
- {
-  rm_mill_shutdown();
- }
+while(exe_times != EXE_TIMES_EXPIRED)
+{
+do
+{
+ sync_set_ew_threshold();//设置出米重量
+ event_bits=xEventGroupWaitBits(rm_sync_event_hdl,SYNC_HALT_EVT|SYNC_SET_EW_OK_EVT,pdTRUE,pdFALSE,osWaitForever );//等待出米重量设置完成
+ if(event_bits & RM_STEP_HALT_EVT)
+ sync_shutdown();
+ }while( !(event_bits & SYNC_SET_EW_OK_EVT))
 
- rm_step_opt_rb1(REG_VALUE_SWITCH_ON);//打开对应的1级仓 1号或者2号
- event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_OPEN_RB1_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//一级仓打开到位
- if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_OPEN_RB1_OK_EVT))//timeout
+ do
  {
-  rm_mill_shutdown();  
-  continue;
- }
- 
- rm_step_wait_ew_weight();//启动米重感知
- event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_WAIT_RW_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//等待米重达标
- if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_WAIT_RW_OK_EVT))//timeout
+ sync_set_rb1(SYNC_SWITCH_ON);//打开对应的1级仓 1号或者2号
+ sync_enable_ew_weight_signal();//启动米重感知和超时
+ event_bits=xEventGroupWaitBits(rm_sync_event_hdl,SYNC_HALT_EVT |SYNC_GET_RW_OK_EVT,pdTRUE,pdFALSE,osWaitForever );//等待米重达标,不处理打开到位信号
+ if(event_bits & RM_STEP_HALT_EVT)//error
  {
-  rm_mill_shutdown();
+  sync_set_rb1(SYNC_SWITCH_OFF);//关闭对应的1级仓 1号或者2号
+  sync_shutdown();
  }
+ }while(!(event_bits & SYNC_GET_RW_OK_EVT));
  
- rm_step_opt_rb1(REG_VALUE_SWITCH_OFF);
- event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_CLOSE_RB1_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//等待一级仓关闭到位
- if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_CLOSE_RB1_OK_EVT))//timeout
- {
-  rm_mill_shutdown();
- }
- 
- rm_step_opt_rl();//调节对应的碾米分度值
- event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_OPT_RL_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//等待分度调节器到位
- if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_OPT_RL_OK_EVT))//timeout
+do
+{
+ sync_set_rb1(SYNC_SWITCH_OFF);
+ event_bits=xEventGroupWaitBits(rm_sync_event_hdl,SYNC_HALT_EVT |SYNC_CLOSE_RB1_OK_EVT,pdTRUE,pdFALSE,osWaitForever );//等待一级仓关闭到位
+ if(event_bits & RM_STEP_HALT_EVT)//error
  {
   rm_mill_shutdown();
  }
- 
- rm_step_opt_rm_motor(REG_VALUE_SWITCH_ON);//打开碾米电机
+}while(!(event_bits & SYNC_CLOSE_RB1_OK_EVT))
+
+do
+{
+ sync_set_motor(SYNC_SWITCH_ON);//打开碾米电机
  osDelay(1000);//等待 1 s 电机稳定转动
- rm_step_opt_rb2(REG_VALUE_SWITCH_ON);//打开2级仓门
- event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_OPEN_RB2_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//等待打开2级仓门到位
- if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_OPEN_RB1_OK_EVT))//timeout
+ sync_set_rb2(SYNC_SWITCH_ON);//打开2级仓门
+ event_bits=xEventGroupWaitBits(rm_sync_event_hdl,SYNC_HALT_EVT |SYNC_OPEN_RB2_OK_EVT,pdTRUE,pdFALSE,osWaitForever );//等待打开2级仓门到位
+ if(event_bits & SYNC_HALT_EVT)
+ {
+  sync_set_motor(SYNC_SWITCH_OFF);//关闭碾米电机
+  sync_set_rb2(SYNC_SWITCH_OFF);//关闭2级仓门
+  rm_mill_shutdown();
+ }
+}while(!(event_bits & RM_STEP_OPEN_RB1_OK_EVT))
+
+do
+{
+ sync_set_rb2(SYNC_SWITCH_OFF);//关闭2级仓
+ event_bits=xEventGroupWaitBits(rm_sync_event_hdl,SYNC_HALT_EVT |SYNC_CLOSE_RB2_OK_EVT,pdTRUE,pdFALSE,osWaitForever );//等待2级仓关闭到位
+ if(event_bits & SYNC_HALT_EVT)
  {
   rm_mill_shutdown();
  }
+}while(!(event_bits & SYNC_CLOSE_RB2_OK_EVT))
  
-  event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_RL_MOTOR_TIME_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//等待碾米时间到
- if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_RL_MOTOR_TIME_OK_EVT))//
+ ew_exe_times++;
+}
+ ew_exe_times=0;
+
+ do
+ {
+ event_bits=xEventGroupWaitBits(rm_sync_event_hdl,SYNC_HALT_EVT,pdTRUE,pdFALSE,MOTOR_RUN_TIMEOUT_VALUE );//等待碾米时间到
+ if(event_bits & SYNC_HALT_EVT)
  {
   rm_mill_shutdown();
  }
- rm_step_opt_rm_motor(REG_VALUE_SWITCH_OFF);//关闭碾米电机马达
- rm_step_opt_rb2(REG_VALUE_SWITCH_OFF);//关闭2级仓
- event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_CLOSE_RB2_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//等待2级仓关闭到位
- if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_CLOSE_RB2_OK_EVT))//timeout
- {
-  rm_mill_shutdown();
- }
+ }while(event_bits & SYNC_HALT_EVT);
  
- rm_step_opt_oh_door(REG_VALUE_SWITCH_ON);//打开升降门
- event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_OPEN_OH_DOOR_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//等待门上升到位
- if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_OPEN_OH_DOOR_OK_EVT))//timeout
+ do
+ {
+ rm_step_opt_rm_motor(SYNC_SWITCH_OFF);//关闭碾米电机马达
+ rm_step_opt_rb2(SYNC_SWITCH_OFF);//关闭2级仓
+ event_bits=xEventGroupWaitBits(rm_sync_event_hdl,SYNC_HALT_EVT |SYNC_CLOSE_RB2_OK_EVT,pdTRUE,pdFALSE,osWaitForever );//等待2级仓关闭到位
+ if(event_bits & RM_STEP_HALT_EVT)
  {
   rm_mill_shutdown();
  }
+ }while(!(event_bits & SYNC_CLOSE_RB2_OK_EVT));
+  
+ do
+ {
+ do
+ {
+ sync_set_oh_door(SYNC_SWITCH_ON);//打开升降门
+ event_bits=xEventGroupWaitBits(rm_sync_event_hdl,SYNC_HALT_EVT |SYNC_OPEN_OH_DOOR_OK_EVT,pdTRUE,pdFALSE,osWaitForever );//等待门上升到位
+ if(event_bits & RM_STEP_HALT_EVT)
+ {
+  rm_mill_shutdown();
+ }
+ }while(!(event_bits & SYNC_OPEN_OH_DOOR_OK_EVT));
+   
  rm_step_wait_take_rice_away();//启动米移走感知
- event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_TAKE_RICE_AWAY_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//等待米被拿走
- if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_TAKE_RICE_AWAY_OK_EVT))//timeout or error
- {
-  rm_mill_shutdown();
- }
+ event_bits=xEventGroupWaitBits(rm_sync_event_hdl,SYNC_HALT_EVT |SYNC_TAKE_RICE_AWAY_OK_EVT,pdTRUE,pdFALSE,RICE_TAKE_AWAY_TIMEOUT_VALUE );//等待米被拿走
  
- rm_step_opt_oh_door(REG_VALUE_SWITCH_OFF);//关闭升降门
- event_bits=xEventGroupWaitBits(rm_sync_event_hdl,RM_STEP_HALT_EVT |RM_STEP_CLOSE_OH_DOOR_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );//
- if(event_bits & RM_STEP_HALT_EVT ||!(event_bits & RM_STEP_CLOSE_OH_DOOR_OK_EVT))//timeout
+ if(event_bits & SYNC_TAKE_RICE_AWAY_OK_EVT)
+  rice_is_take_away= BSP_OK;
+ else
+  rice_is_take_away= BSP_ERROR;
+ do
+ {
+ rm_step_opt_oh_door(SYNC_SWITCH_OFF);//关闭升降门
+ event_bits=xEventGroupWaitBits(rm_sync_event_hdl,SYNC_HALT_EVT |SYNC_CLOSE_OH_DOOR_OK_EVT,pdTRUE,pdFALSE,TIMEOUT_VALUE );
+ if(event_bits & SYNC_HALT_EVT)
  {
   rm_mill_shutdown();
  }
+ }while(!(event_bits & SYNC_CLOSE_OH_DOOR_OK_EVT));
+ 
+ if(event_bits & SYNC_HALT_EVT)
+ {
+  rm_mill_shutdown();
+ }
+ }while(rice_is_take_away!=BSP_YES);
+ 
+ rice_is_take_away=BSP_NO;
  
  }
 }
@@ -827,7 +643,7 @@ static void rm_set_rl_common(uint16_t tar_steps);
  
  if(tar_steps==RL_MOTOR_STEPS_FOR_RL0)//0点特殊处理
  {
-  if( BSP_rl_is_in_rst_pos()!=RM_OK)
+  if( BSP_rl_is_in_rst_pos()!=BSP_YES)
   {
   BSP_rl_motor_run(RL_MOTOR_DIR_POSITIVE,RL_MOTOR_STEPS_FOR_RL0);//向复位点运行，到位后发送到位信号
   } 
@@ -881,12 +697,12 @@ static void rm_set_rm_fault_code()
 
 static void rm_turn_on_rm_motor()
 {
-  BSP_rm_motor_pwr_on_dwn_motor(BSP_PWR_DWN);
+  BSP_rm_motor_pwr(BSP_PWR_ON);
 }
 
 static void rm_turn_off_rm_motor()
 {
-  BSP_rm_motor_pwr_on_dwn(BSP_PWR_ON);
+  BSP_rm_motor_pwr(BSP_PWR_DWN);
 }
 
 static void rm_turn_on_rb1_1_switch()

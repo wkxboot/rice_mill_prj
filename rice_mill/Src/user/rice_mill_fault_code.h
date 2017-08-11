@@ -34,7 +34,7 @@
 #define  ERROR_CODE_MOTOR_OC_STALL            (1<<7)
 #define  ERROR_CODE_OH_DOOR_UP_TIMEOUT        (1<<8)
 #define  ERROR_CODE_OH_DOOR_DOWN_TIMEOUT      (1<<9)
-#define  ERROR_CODE_OH_DOOR_MOTOR_STALL       (1<<10)
+#define  ERROR_CODE_OH_DOOR_MOTOR_BLOCK       (1<<10)
 #define  ERROR_CODE_RL_MOTOR_STALL            (1<<11)
 #define  ERROR_CODE_RL_RUN_TIMEOUT            (1<<12)
 #define  ERROR_CODE_RB1_OT                    (1<<13)
