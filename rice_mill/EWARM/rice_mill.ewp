@@ -1055,6 +1055,9 @@
                     <name>$PROJ_DIR$\..\Src\user\mb_slave_reg.c</name>
                 </file>
                 <file>
+                    <name>$PROJ_DIR$\..\Src\user\rm_bsp.c</name>
+                </file>
+                <file>
                     <name>$PROJ_DIR$\..\Src\user_tasks.c</name>
                 </file>
             </group>

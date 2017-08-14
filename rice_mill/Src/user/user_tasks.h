@@ -23,7 +23,9 @@
 #define  SYNC_TAKE_RICE_AWAY_OK_EVT      (1<<10)
 
 
+/********电子秤寄存器地址**********************/
 
+#define  
 
 
 

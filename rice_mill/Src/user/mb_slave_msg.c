@@ -362,7 +362,7 @@ static void set_msg_z_clearing_regholding_write(void)        //0x100f      清�
  } 
   (void)status;
 }
-static void set_msg_w_threshold_regholding_write(void)       //0x1010      重量定点值
+static void set_msg_w_threshold_regholding_write(void)       //0x1010     重量定点值
 {
   osStatus status;
   uint32_t reg_value;

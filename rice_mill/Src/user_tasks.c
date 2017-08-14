@@ -92,32 +92,22 @@ static void tasks_environment_init()
 
 void communication_with_host_task(void const * argument)
 {
-   APP_LOG_DEBUG("MODBUS SLAVE TASK START!\r\n");
-   osEvent =osSignalWait(SIGNAL_RX_FROM_EW_COMPLETED,osWaitForever); //无超时
-   
-   if( osEvent.status !=  osEventSignal)
-   {
-     APP_LOG_ERROR("recv signal error!\r\n");
-   }
-   else
-   {
-     APP_LOG_DEBUG("recv signal success!\r\n");;        
-   }
-    
+   APP_LOG_DEBUG("工控机轮询任务开始!\r\n");
+
     /* Select either ASCII or RTU Mode. */
     ( void )eMBInit( MB_RTU, 0x0A, 0, 9600, MB_PAR_NONE );
     /* Enable the Modbus Protocol Stack. */
     ( void )eMBEnable();
     for( ;; )
     {
-      /* Call the main polling loop of the Modbus protocol stack. */
-      ( void )eMBPoll();
+    /* Call the main polling loop of the Modbus protocol stack. */
+    ( void )eMBPoll();
     }
   }
 
 void communication_with_ew_task(void const * argument)
 {
-   APP_LOG_DEBUG("MODBUS MASTER TASK START!\r\n");
+   APP_LOG_DEBUG("电子秤轮询任务开始 !\r\n");
    /* Select either ASCII or RTU Mode. */
    (void)eMBMasterInit();
     /* Enable the Modbus Protocol Stack. */
@@ -130,12 +120,83 @@ void communication_with_ew_task(void const * argument)
   
 }
 
+void ew_func_task(void const * argument)
+{
+ osEvent ew_msg;
+ eMBMasterReqErrCode err_code;
+ 
+ APP_LOG_DEBUG("电子秤功能任务开始 !\r\n");
+ 
+ while(1)
+ {
+ ew_msg=osMessageGet(ew_queue_hdl,osWaitForever);
+ if(ew_msg.status != osEventMessage)
+ continue;
+ switch(ew_msg.value.v)
+ {
+ case MSG_EW_OBTAIN_RICE_WEIGHT://毛重
+ uint32_t rice_gross_weight;
+ 
+ err_code=eMBMasterReqReadHoldingRegister(SLAVE_EW_ADDR,REG_GROSS_WEIGHT_ADDR_,2,EW_GET_RESOURCE_TIMEOUT) 
+ if(err_code==MB_MRE_NO_ERR)
+ {
+    
+ }
+ else if(err_code==MB_MRE_TIMEDOUT)
+ {
+  set_rm_fault_code(FAULT_CODE_EW_NO_RESPONSE); 
+  osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);
+ }
+ break;
+ case MSG_EW_OBTAIN_RICE_NET_WEIGHT://净重
+ err_code=eMBMasterReqReadHoldingRegister(SLAVE_EW_ADDR,REG_NET_WEIGHT_ADDR,2,EW_GET_RESOURCE_TIMEOUT);
+ if(err_code==MB_MRE_NO_ERR)
+ {
+    
+ }
+ else if(err_code==MB_MRE_TIMEDOUT)
+ {
+  set_rm_fault_code(FAULT_CODE_EW_NO_RESPONSE); 
+  osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);
+ } 
+ break;
+ case MSG_EW_SET_RICE_WEIGHT_THRESHOLD://设置定点值
+ 
+ get_reg_value(thres_hold);
+ err_code=eMBMasterReqWriteMultipleHoldingRegister(SLAVE_EW_ADDR,REG_WEIGHT_THRESHOLD_ADDR,
+                                                  2,
+                                                  USHORT * pusDataBuffer,
+                                                  EW_GET_RESOURCE_TIMEOUT );
+ break;
+ case MSG_EW_REMOVE_TARE://去皮重
+ 
+ get_reg_value(thres_hold);
+ err_code=eMBMasterReqWriteMultipleHoldingRegister(SLAVE_EW_ADDR,REG_REMOVE_TARE_ADDR,
+                                                  2,
+                                                  USHORT * pusDataBuffer,
+                                                  EW_GET_RESOURCE_TIMEOUT );
+ break;
+ case MSG_EW_CLEARING_ZERO://清零
+ 
+ get_reg_value(thres_hold);
+ err_code=eMBMasterReqWriteMultipleHoldingRegister(SLAVE_EW_ADDR,REG_CLEARING_ZERO_ADDR,
+                                                  2,
+                                                  USHORT * pusDataBuffer,
+                                                  EW_GET_RESOURCE_TIMEOUT );
+ break; 
+ }
+
+
+ }
+  
+}
+
 void sensor_info_task(void const * argument)
 {
 uint32_t fault_code;
 uint16_t t,rh;
 
-xEventGroupClearBits(sync_event_hdl,SYNC_ALL_EVT);
+//xEventGroupClearBits(sync_event_hdl,SYNC_ALL_EVT);
 
 /* 温湿度传感器*/
 t=BSP_get_temperature();
@@ -155,8 +216,10 @@ if(RH_MAX >=rh || rh >= RH_MIN)
 {
  set_reg_value( RB1_1_RH_REGINPUT_ADDR,1, rh,REGINPUT_MODE);
  if(rh > RH_WARNING)
+ {
  set_rm_fault_code(ERROR_CODE_RB1_OTH); 
  osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);
+ }
 }
 /*1号米仓空检查*/
 
@@ -218,20 +281,6 @@ if(BSP_rb2_is_block()==BSP_TRUE)
  osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);
 }
 
-/*实时米重*/
-if(rw_obtain_interval==RW_OBTAIN_INTERVAL)
-{
-MB_send(get_rm_weight);
-rw_obtain_interval=0;
-}
-
-uint16_t rw_cur,rw_tar;
-rw_cur=get_reg_value(EW_NET_WEIGHT_REGINPUT_ADDR,1,REGINPUT_MODE) / 2;
-rw_tar=get_reg_value(RW_REGHOLDING_ADDR,1,REGHOLDING_MODE);
-
-if(BSP_is_ew_signal_ok() && rw_cur >= rw_tar)
- osSignalSet( rm_sync_task_hdl,SYNC_OBTAIN_RW_OK_EVT);
-
 /*升降门位置检测*/
 if(BSP_is_oh_door_turn_on())
 {
@@ -251,6 +300,20 @@ if(BSP_is_oh_door_block())
  set_rm_fault_code(FAULT_CODE_OH_DOOR_MOTOR_BLOCK); 
  osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);  
 }
+
+/*实时米重*/
+if(rw_obtain_interval==RW_OBTAIN_INTERVAL)
+{
+osMessagePut(ew_queue_hdl,MSG_EW_OBTAIN_RICE_NET_WEIGHT,osWaitForever);
+rw_obtain_interval=0;
+}
+
+uint16_t rw_cur,rw_tar;
+rw_cur=get_reg_value(EW_NET_WEIGHT_REGINPUT_ADDR,1,REGINPUT_MODE) / 2;
+rw_tar=get_reg_value(RW_REGHOLDING_ADDR,1,REGHOLDING_MODE);
+
+ if(BSP_is_ew_signal_ok() && rw_cur >= rw_tar)
+ osSignalSet( rm_sync_task_hdl,SYNC_OBTAIN_RW_OK_EVT);
 }
 
 
@@ -468,7 +531,7 @@ static void  asyn_pwr_dwn_oh_door()
 
 static void asyn_enable_remove_tare()
 {
- MB_send();
+ osMessagePut(ew_queue_hdl,MSG_EW_REMOVE_TARE,osWaitForever);
  APP_LOG_DEBUG("使能去皮!");   
 }
 
@@ -478,7 +541,7 @@ static void asyn_disable_remove_tare()
 }
 static void asyn_enable_zero_clearing()
 {
- rm_zero_clearing(); 
+ osMessagePut(ew_queue_hdl,MSG_EW_CLEARING_ZERO,osWaitForever);
  APP_LOG_DEBUG("使能清零!");  
 }
 
@@ -489,7 +552,7 @@ static void asyn_disable_zero_clearing()
 
 static asyn_set_ew_value()
 {
-MB_send(); 
+osMessagePut(ew_queue_hdl,MSG_EW_SET_RICE_WEIGHT_THRESHOLD,osWaitForever);
 APP_LOG_DEBUG("设置定点值:%d!",reg_get_value();  
 }
 

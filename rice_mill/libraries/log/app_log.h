@@ -72,7 +72,7 @@
 #define  APP_LOG_INIT()                     SEGGER_RTT_Init()        
 
 #else 
-#error "APP_DEBUG_USE_UART and APP_DEBUG_USE_SEGGER_RTT are all false!!!!! "//Èç¹ûÍ¬Ê±ÎªÕæ UART¸²¸ÇSEGGER_RTTÊä³ö
+#error "APP_DEBUG_USE_UART å’Œ APP_DEBUG_USE_SEGGER_RTTè‡³å°‘ä¸€ä¸ªä¸ºçœŸ!\r\n"// UARTæˆ–è€…SEGGER_RTTè‡³å°‘ä¸€ä¸ªä¸ºçœŸ
 #endif
 
 #define APP_LOG_ERROR(format,arg...)                                                              \
