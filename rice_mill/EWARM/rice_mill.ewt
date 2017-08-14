@@ -1170,10 +1170,10 @@
             <group>
                 <name>user</name>
                 <file>
-                    <name>$PROJ_DIR$\..\Src\user\mb_slave_cb.c</name>
+                    <name>$PROJ_DIR$\..\Src\user\mb_slave_msg.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\Src\user\mb_slave_event.c</name>
+                    <name>$PROJ_DIR$\..\Src\user\mb_slave_reg.c</name>
                 </file>
                 <file>
                     <name>$PROJ_DIR$\..\Src\user_tasks.c</name>

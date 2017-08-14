@@ -42,6 +42,8 @@ D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Middlewares/Th
 -I
 D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Middlewares/Third_Party/freemodbus_master/port
 -I
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\EWARM/../Src/user
+-I
 C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\arm\CMSIS\Include
 -I
 C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\arm\inc
@@ -87,6 +89,8 @@ D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party
 D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\freemodbus_master\modbus\rtu
 -I
 D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\freemodbus_master\port
+-I
+D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\Src\user
 -I
 C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\arm\CMSIS\Include
 -D__CHAR_BITS__=8

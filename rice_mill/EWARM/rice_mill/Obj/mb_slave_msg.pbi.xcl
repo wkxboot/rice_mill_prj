@@ -1,4 +1,4 @@
-"D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\Middlewares\Third_Party\freemodbus_slave\modbus\functions\mbfuncother.c"
+"D:\development\st\stm32\src_code\rice_mill_prj\rice_mill\Src\user\mb_slave_msg.c"
 -std=c11
 -ferror-limit=0
 -I
