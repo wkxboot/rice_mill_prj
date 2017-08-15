@@ -70,10 +70,71 @@
 void MX_GPIO_Init(void)
 {
 
+  GPIO_InitTypeDef GPIO_InitStruct;
+
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOF_CLK_ENABLE();
+  __HAL_RCC_GPIOG_CLK_ENABLE();
+  __HAL_RCC_GPIOE_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOF, OH_DOOR_PWR_ON_NEGATIVE_POS_Pin|OH_DOOR_PWR_ON_POSITIVE_POS_Pin|RB2_PWR_ON_NEGATIVE_POS_Pin|RB2_PWR_ON_POSITIVE_POS_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOG, RB1_PWR_ON_NEGATIVE_POS_Pin|RB1_PWR_ON_POSITIVE_POS_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOE, AC_FAN1_PWR_POS_Pin|AC_FAN2_PWR_POS_Pin|RICE_FAN_PWR_POS_Pin|UV_LAMP_PWR_POS_Pin 
+                          |E_LAMP_PWR_POS_Pin|RM_MOTOR_PWR_POS_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOD, CS_8711_POS_Pin|DIR_8711_POS_Pin|RESET_8711_POS_Pin|SLEEP_8711_POS_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : PFPin PFPin PFPin PFPin */
+  GPIO_InitStruct.Pin = OH_DOOR_PWR_ON_NEGATIVE_POS_Pin|OH_DOOR_PWR_ON_POSITIVE_POS_Pin|RB2_PWR_ON_NEGATIVE_POS_Pin|RB2_PWR_ON_POSITIVE_POS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PGPin PGPin */
+  GPIO_InitStruct.Pin = RB1_PWR_ON_NEGATIVE_POS_Pin|RB1_PWR_ON_POSITIVE_POS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PEPin PEPin PEPin PEPin 
+                           PEPin PEPin */
+  GPIO_InitStruct.Pin = AC_FAN1_PWR_POS_Pin|AC_FAN2_PWR_POS_Pin|RICE_FAN_PWR_POS_Pin|UV_LAMP_PWR_POS_Pin 
+                          |E_LAMP_PWR_POS_Pin|RM_MOTOR_PWR_POS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PDPin PDPin PDPin PDPin */
+  GPIO_InitStruct.Pin = CS_8711_POS_Pin|DIR_8711_POS_Pin|RESET_8711_POS_Pin|SLEEP_8711_POS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PDPin PDPin PDPin PDPin 
+                           PDPin PDPin PDPin PDPin 
+                           PDPin PDPin */
+  GPIO_InitStruct.Pin = FAULT_8711_POS_Pin|STALL_8711_POS_Pin|RB1_1_TURN_ON_POS_Pin|RB1_TURN_OFF_POS_Pin 
+                          |RB1_2_TURN_ON_POS_Pin|RB2_TURN_ON_POS_Pin|RB2_TURN_OFF_POS_Pin|OH_DOOR_TURN_ON_POS_Pin 
+                          |OH_DOOR_TURN_OFF_POS_Pin|RL_RESET_POS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PGPin PGPin PGPin PGPin */
+  GPIO_InitStruct.Pin = RB1_1_EMPTY_POS_Pin|RB1_2_EMPTY_POS_Pin|OH_DOOR_CLEAR_POS_Pin|RICE_TAKE_AWAY_POS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
 }
 
