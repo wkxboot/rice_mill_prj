@@ -29,6 +29,7 @@
 #endif
 /*-----------------------Master mode use these variables----------------------*/
 #if MB_MASTER_RTU_ENABLED > 0 || MB_MASTER_ASCII_ENABLED > 0
+/*
 //Master mode:DiscreteInputs variables
 USHORT   usMDiscInStart                             = M_DISCRETE_INPUT_START;
 #if      M_DISCRETE_INPUT_NDISCRETES%8
@@ -46,9 +47,36 @@ UCHAR    ucMCoilBuf[MB_MASTER_TOTAL_SLAVE_NUM][M_COIL_NCOILS/8];
 //Master mode:InputRegister variables
 USHORT   usMRegInStart                              = M_REG_INPUT_START;
 USHORT   usMRegInBuf[MB_MASTER_TOTAL_SLAVE_NUM][M_REG_INPUT_NREGS];
+
+*/
 //Master mode:HoldingRegister variables
 USHORT   usMRegHoldStart                            = M_REG_HOLDING_START;
 USHORT   usMRegHoldBuf[MB_MASTER_TOTAL_SLAVE_NUM][M_REG_HOLDING_NREGS];
+
+
+//获取毛重值
+uint16_t master_get_gross_weight()
+{
+  uint16_t g_w;
+  uint8_t hi,lo;
+  
+  hi=usMRegHoldBuf[0][0] & 0xFF;
+  lo=(usMRegHoldBuf[0][0]>>8) & 0xFF;
+  
+  g_w=(uint16_t)hi<<8|lo;
+}
+
+//获取净重值
+uint16_t master_get_net_weight()
+{
+  uint16_t g_w;
+  uint8_t hi,lo;
+  
+  hi=usMRegHoldBuf[0][1] & 0xFF;
+  lo=(usMRegHoldBuf[0][1]>>8) & 0xFF;
+  
+  g_w=(uint16_t)hi<<8|lo;
+}
 
 /**
  * Modbus master input register callback function.

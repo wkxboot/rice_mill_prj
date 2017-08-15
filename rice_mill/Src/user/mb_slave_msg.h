@@ -21,6 +21,7 @@
 #define  MSG_TURN_OFF_RB1_1_SWITCH           0x000D
 #define  MSG_TURN_ON_RB1_2_SWITCH            0x000E
 #define  MSG_TURN_OFF_RB1_2_SWITCH           0x000F
+#define  MSG_PWR_DWN_RB1                     0x0010
 #define  MSG_TURN_ON_RB2_SWITCH              0x0010
 #define  MSG_TURN_OFF_RB2_SWITCH             0x0011
 #define  MSG_TURN_ON_UV_LAMP                 0x0012
@@ -34,6 +35,7 @@
 #define  MSG_ENABLE_ZERO_CLEARING            0x0018
 #define  MSG_DISABLE_ZERO_CLEARING           0x0019
 #define  MSG_SET_EW_THRESHOLD_VALUE          0x001A
+#define  MSG_SETUP_RL                        0x001B
 
 
 

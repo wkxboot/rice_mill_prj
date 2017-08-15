@@ -84,10 +84,10 @@ PR_BEGIN_EXTERN_C
 /*! \brief If master send a frame which is not broadcast,the master will wait sometime for slave.
  * And if slave is not respond in this time,the master will process this timeout error.
  * Then master can send other frame */
-#define MB_MASTER_TIMEOUT_MS_RESPOND            (2000 )
+#define MB_MASTER_TIMEOUT_MS_RESPOND            (200 )
 /*! \brief The total slaves in Modbus Master system. Default 16.
  * \note : The slave ID must be continuous from 1.*/
-#define MB_MASTER_TOTAL_SLAVE_NUM               ( 2 )
+#define MB_MASTER_TOTAL_SLAVE_NUM               ( 1 )
 #endif
 
 #endif

@@ -148,7 +148,7 @@ static void set_msg_rw_regholding_write(void)               //0x1002      出米
       reg_value == REG_VALUE_RL_7 ||
       reg_value == REG_VALUE_RL_9 )
    {
-   status= osMessagePut (rm_asyn_msg_queue_hdl ,reg_value,0);
+   status= osMessagePut (rm_asyn_msg_queue_hdl ,MSG_SETUP_RL,0);
    APP_LOG_DEBUG("发送消息:出米分度值! status:%d\r\n",status); 
    }
    (void)status;

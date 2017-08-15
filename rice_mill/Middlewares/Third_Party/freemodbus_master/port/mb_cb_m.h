@@ -17,8 +17,8 @@
 #define M_COIL_NCOILS                 8
 #define M_REG_INPUT_START             0
 #define M_REG_INPUT_NREGS             8
-#define M_REG_HOLDING_START           4096
-#define M_REG_HOLDING_NREGS           8
+#define M_REG_HOLDING_START           0
+#define M_REG_HOLDING_NREGS           97
 /* master mode: holding register's all address */
 #define          M_HD_RESERVE                     0
 /* master mode: input register's all address */

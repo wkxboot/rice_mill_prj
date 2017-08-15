@@ -1,13 +1,19 @@
 #ifndef __USER_TASKS_H__
 #define __USER_TASKS_H__
 
-/*
- *碾米机同步任务事件
- */
-#define  RICE_TAKE_AWAY_TIMEOUT_VALUE    30000 //30s
-#define  MOTOR_EXPIRED_TIMEOUT_VALUE     5000  //5s
-
-
+/****************************************************
+ *碾米机同步任务
+ ***************************************************/
+#define  RICE_TAKE_AWAY_TIMEOUT_VALUE        30000 
+#define  MOTOR_RUN_EXPIRED_TIMEOUT_VALUE     5000 
+#define  RL_SET_EXPIRED_TIMEOUT_VALUE        5000  
+#define  RW_SET_EXPIRED_TIMEOUT_VALUE        1000
+#define  RW_WAIT_EXPIRED_TIMEOUT_VALUE       5000
+#define  RB1_RUN_EXPIRED_TIMEOUT_VALUE       5000
+#define  MOTOR_WAIT_EXPIRED_TIMEOUT_VALUE    1000 
+#define  OH_DOOR_RUN_EXPIRED_TIMEOUT_VALUE   5000
+   
+   
 
 #define  SYNC_FAULT_EVT                  (1<<0)
 #define  SYNC_SET_RL_OK_EVT              (1<<1)
@@ -24,10 +30,18 @@
 
 
 /********电子秤寄存器地址**********************/
+#define  EW_GET_RESOURCE_TIMEOUT         50 //为了获取电子秤通信权而等待的时间 单位ms
+#define  SLAVE_EW_ADDR                   02
+#define  REG_GROSS_WEIGHT_ADDR           0x0001     
+#define  REG_NET_WEIGHT_ADDR             0x0002
+#define  REG_WEIGHT_THRESHOLD_ADDR       0x000D
+#define  REG_REMOVE_TARE_ADDR            0x0061
 
-#define  
-
-
+/**************  异步任务 *******************************/
+#define  RB1_TIMEOUT_VALUE                 3000
+#define  RB2_TIMEOUT_VALUE                 3000
+#define  RL_TIMEOUT_VALUE                  3000
+#define  OH_DOOR_TIMEOUT_VALUE             5000
 
 
 

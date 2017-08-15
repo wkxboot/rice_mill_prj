@@ -123,6 +123,11 @@ void communication_with_ew_task(void const * argument)
 void ew_func_task(void const * argument)
 {
  osEvent ew_msg;
+ uint16_t reg_value;
+ uint32_t threshold;
+ uint16_t temp[2];
+ uint16_t rice_gross_weight;
+ uint16_t rice_net_weight;
  eMBMasterReqErrCode err_code;
  
  APP_LOG_DEBUG("电子秤功能任务开始 !\r\n");
@@ -132,63 +137,64 @@ void ew_func_task(void const * argument)
  ew_msg=osMessageGet(ew_queue_hdl,osWaitForever);
  if(ew_msg.status != osEventMessage)
  continue;
+ err_code=MB_MRE_NO_ERR;
  switch(ew_msg.value.v)
  {
  case MSG_EW_OBTAIN_RICE_WEIGHT://毛重
- uint32_t rice_gross_weight;
- 
- err_code=eMBMasterReqReadHoldingRegister(SLAVE_EW_ADDR,REG_GROSS_WEIGHT_ADDR_,2,EW_GET_RESOURCE_TIMEOUT) 
+ err_code=eMBMasterReqReadHoldingRegister(SLAVE_EW_ADDR,REG_GROSS_WEIGHT_ADDR,2,EW_GET_RESOURCE_TIMEOUT) 
  if(err_code==MB_MRE_NO_ERR)
  {
-    
- }
- else if(err_code==MB_MRE_TIMEDOUT)
- {
-  set_rm_fault_code(FAULT_CODE_EW_NO_RESPONSE); 
-  osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);
+  rice_gross_weight=master_get_gross_weight(); 
+  set_reg_value(EW_GROSS_WEIGHT_REGINPUT_ADDR,1, rice_gross_weight,REGINPUT_MODE);
  }
  break;
  case MSG_EW_OBTAIN_RICE_NET_WEIGHT://净重
  err_code=eMBMasterReqReadHoldingRegister(SLAVE_EW_ADDR,REG_NET_WEIGHT_ADDR,2,EW_GET_RESOURCE_TIMEOUT);
  if(err_code==MB_MRE_NO_ERR)
  {
-    
+   rice_net_weight= master_get_net_weight();
+   set_reg_value(EW_NET_WEIGHT_REGINPUT_ADDR,1, rice_net_weight,REGINPUT_MODE);
  }
- else if(err_code==MB_MRE_TIMEDOUT)
+ break;
+ case MSG_EW_SET_RICE_WEIGHT_THRESHOLD://设置定点值
+ threshold=get_reg_value(EW_THRESHOLD_REGHOLDING_ADDR,2,REGHOLDING_MODE);
+ temp[0]=(threshold>>16) & 0xffff;
+ temp[1]=(threshold>>0)  & 0xffff;
+
+ err_code=eMBMasterReqWriteMultipleHoldingRegister(SLAVE_EW_ADDR,REG_WEIGHT_THRESHOLD_ADDR,
+                                                  2,
+                                                  temp,
+                                                  EW_GET_RESOURCE_TIMEOUT );
+ if(err_code==MB_MRE_NO_ERR)
+ {
+  osSignalSet( rm_sync_task_hdl,SYNC_SET_EW_OK_EVT);
+ }
+ break;
+ case MSG_EW_REMOVE_TARE://去皮重
+ reg_value=0x0002;
+ err_code=eMBMasterReqWriteHoldingRegister( SLAVE_EW_ADDR,REG_REMOVE_TARE_ADDR, reg_value, EW_GET_RESOURCE_TIMEOUT);
+  if(err_code==MB_MRE_NO_ERR)
+ {
+  osSignalSet( rm_sync_task_hdl,SYNC_SET_EW_OK_EVT);
+ }
+ break;
+ case MSG_EW_CLEARING_ZERO://清零
+ reg_value=0x0000;
+ err_code=eMBMasterReqWriteHoldingRegister( SLAVE_EW_ADDR,REG_CLEARING_ZERO_ADDR, reg_value, EW_GET_RESOURCE_TIMEOUT);
+ if(err_code==MB_MRE_NO_ERR)
+ {
+  osSignalSet( rm_sync_task_hdl,SYNC_SET_EW_OK_EVT);
+ }
+ break; 
+ }
+ 
+ if(err_code==MB_MRE_TIMEDOUT)
  {
   set_rm_fault_code(FAULT_CODE_EW_NO_RESPONSE); 
   osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);
+ }
+
  } 
- break;
- case MSG_EW_SET_RICE_WEIGHT_THRESHOLD://设置定点值
- 
- get_reg_value(thres_hold);
- err_code=eMBMasterReqWriteMultipleHoldingRegister(SLAVE_EW_ADDR,REG_WEIGHT_THRESHOLD_ADDR,
-                                                  2,
-                                                  USHORT * pusDataBuffer,
-                                                  EW_GET_RESOURCE_TIMEOUT );
- break;
- case MSG_EW_REMOVE_TARE://去皮重
- 
- get_reg_value(thres_hold);
- err_code=eMBMasterReqWriteMultipleHoldingRegister(SLAVE_EW_ADDR,REG_REMOVE_TARE_ADDR,
-                                                  2,
-                                                  USHORT * pusDataBuffer,
-                                                  EW_GET_RESOURCE_TIMEOUT );
- break;
- case MSG_EW_CLEARING_ZERO://清零
- 
- get_reg_value(thres_hold);
- err_code=eMBMasterReqWriteMultipleHoldingRegister(SLAVE_EW_ADDR,REG_CLEARING_ZERO_ADDR,
-                                                  2,
-                                                  USHORT * pusDataBuffer,
-                                                  EW_GET_RESOURCE_TIMEOUT );
- break; 
- }
-
-
- }
-  
 }
 
 void sensor_info_task(void const * argument)
@@ -223,14 +229,14 @@ if(RH_MAX >=rh || rh >= RH_MIN)
 }
 /*1号米仓空检查*/
 
-if(BSP_is_rb1_empty()==BSP_TRUE)
+if(BSP_is_rb1_1_empty()==BSP_TRUE)
 {
   set_rm_fault_code(ERROR_CODE_RB1_1_EMPTY); 
   osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);
 }
  /*2号米仓空检查*/
 
-if(BSP_is_rb2_empty()==BSP_TRUE)
+if(BSP_is_rb1_2empty()==BSP_TRUE)
 {
   set_rm_fault_code(ERROR_CODE_RB1_2_EMPTY); 
   osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);
@@ -240,68 +246,80 @@ if(BSP_is_rb2_empty()==BSP_TRUE)
 
 if(BSP_is_rb1_no1_turn_on()==BSP_TRUE)
 {
- set_reg_value( RB1_1_SWITCH_REGHOLDING_ADDR,1,REG_VALUE_SWITCH_ON,REGHOLDING_MODE);
+ osTimerStop(rb1_1_turn_on_timer_hdl);
  osSignalSet( rm_sync_task_hdl,SYNC_OPEN_RB1_1_OK_EVT);
 }
  if(BSP_is_rb1_no2_turn_on()==BSP_TRUE)
  {
- set_reg_value( RB1_2_SWITCH_REGHOLDING_ADDR,1,REG_VALUE_SWITCH_ON,REGHOLDING_MODE);
+ osTimerStop(rb1_2_turn_on_timer_hdl);
  osSignalSet( rm_sync_task_hdl,SYNC_OPEN_RB1_2_OK_EVT);
  }
- if(BSP_is_rb1_no1_turn_off()==BSP_TRUE)
+ if(BSP_is_rb1_turn_off()==BSP_TRUE)
  {
-  set_reg_value( RB1_1_SWITCH_REGHOLDING_ADDR,1,REG_VALUE_SWITCH_OFF,REGHOLDING_MODE);
-  set_reg_value( RB1_2_SWITCH_REGHOLDING_ADDR,1,REG_VALUE_SWITCH_OFF,REGHOLDING_MODE);
+  //set_reg_value( RB1_1_SWITCH_REGHOLDING_ADDR,1,REG_VALUE_SWITCH_OFF,REGHOLDING_MODE);
+  //set_reg_value( RB1_2_SWITCH_REGHOLDING_ADDR,1,REG_VALUE_SWITCH_OFF,REGHOLDING_MODE);
+  osTimerStop(rb1_turn_off_timer_hdl);
   osSignalSet( rm_sync_task_hdl,SYNC_CLOSE_RB1_OK_EVT);
  }
 
- if(BSP_rb1_is_block()==BSP_TRUE)
+ if(BSP_is_rb1_block()==BSP_TRUE)
  {
-  set_reg_value( RB1_1_SWITCH_REGHOLDING_ADDR,1,REG_VALUE_SWITCH_OFF,REGHOLDING_MODE);
-  set_reg_value( RB1_2_SWITCH_REGHOLDING_ADDR,1,REG_VALUE_SWITCH_OFF,REGHOLDING_MODE);
-  set_rm_fault_code(ERROR_CODE_RB1_SWITCH_FAULT);
+  set_rm_fault_code(ERROR_CODE_RB1_SWITCH_BLOCK);
   osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);
  }
 
 /*2级仓阀门位置检测*/
-if(BSP_rb2_is_turn_on()==BSP_TRUE)
+if(BSP_is_rb2_turn_on()==BSP_TRUE)
 {
-  set_reg_value( RB2_SWITCH_REGHOLDING_ADDR,1,REG_VALUE_SWITCH_ON,REGHOLDING_MODE);
+  osTimerStop(rb2_turn_on_timer_hdl);
   osSignalSet( rm_sync_task_hdl,SYNC_OPEN_RB2_OK_EVT);
 }
-if(BSP_rb2_is_turn_off()==BSP_TRUE)
+if(BSP_is_rb2_turn_off()==BSP_TRUE)
 {
-  set_reg_value( RB2_SWITCH_REGHOLDING_ADDR,1,REG_VALUE_SWITCH_OFF,REGHOLDING_MODE);
+  osTimerStop(rb2_turn_off_timer_hdl);
   osSignalSet( rm_sync_task_hdl,SYNC_CLOSE_RB2_OK_EVT);
 }
-if(BSP_rb2_is_block()==BSP_TRUE)
+if(BSP_is_rb2_block()==BSP_TRUE)
 {
- set_reg_value( RB2_SWITCH_REGHOLDING_ADDR,1,REG_VALUE_SWITCH_BLOCK,REGHOLDING_MODE);
- set_rm_fault_code(ERROR_CODE_RB2_SWITCH_FAULT); 
+ set_rm_fault_code(ERROR_CODE_RB2_SWITCH_BLOCK); 
  osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);
 }
 
 /*升降门位置检测*/
 if(BSP_is_oh_door_turn_on())
 {
- set_reg_value( OH_DOOR_SWITCH_REGHOLDING_ADDR,1,REG_VALUE_SWITCH_ON,REGHOLDING_MODE);
+ osTimerStop(oh_door_turn_on_timer_hdl);
  osSignalSet( rm_sync_task_hdl,SYNC_OPEN_OH_DOOR_OK_EVT);
+ 
 }
 
 if(BSP_is_oh_door_turn_off())
 {
- set_reg_value( OH_DOOR_SWITCH_REGHOLDING_ADDR,1,REG_VALUE_SWITCH_OFF,REGHOLDING_MODE);
+ osTimerStop(oh_door_turn_off_timer_hdl);
  osSignalSet( rm_sync_task_hdl,SYNC_CLOSE_OH_DOOR_OK_EVT);
 }
 
 if(BSP_is_oh_door_block())
 {
- set_reg_value( OH_DOOR_SWITCH_REGHOLDING_ADDR,1,REG_VALUE_SWITCH_BLOCK,REGHOLDING_MODE);
  set_rm_fault_code(FAULT_CODE_OH_DOOR_MOTOR_BLOCK); 
  osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);  
 }
 
+uint16_t oh_door_value;
+oh_door_state=get_reg_value(OH_DOOR_SWITCH_REGHOLDING_ADDR,1,REGHOLDING_MODE);
+                            
+if(!BSP_is_oh_door_cleared() && oh_door_state==REG_VALUE_SWITCH_OFF && !BSP_is_oh_door_turn_off() )
+{
+ osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_OH_DOOR,0);
+}
+else if(BSP_is_oh_door_cleared() && oh_door_state==REG_VALUE_SWITCH_OFF && !BSP_is_oh_door_turn_off())
+{
+ osMessagePut(rm_asyn_msg_queue_hdl ,MSG_TURN_OFF_OH_DOOR,0); 
+}
+
+
 /*实时米重*/
+rw_obtain_interval++;
 if(rw_obtain_interval==RW_OBTAIN_INTERVAL)
 {
 osMessagePut(ew_queue_hdl,MSG_EW_OBTAIN_RICE_NET_WEIGHT,osWaitForever);
@@ -329,11 +347,11 @@ static void asyn_turn_on_rm()
    status=osThreadResume(rm_sync_task_id);
    if(status==osOK)
    {
-    APP_LOG_DEBUG("恢复任务成功!\r\n");
+    APP_LOG_DEBUG("恢复碾米任务成功!\r\n");
    }
    else
    {
-    APP_LOG_DEBUG("恢复任务失败!\r\n"); 
+    APP_LOG_DEBUG("恢复碾米任务失败!\r\n"); 
    }
   }
 }
@@ -346,11 +364,11 @@ void asyn_turn_off_rm()
    status=osThreadSuspend (rm_sync_task_id);
    if(status==osOK)
    {
-    APP_LOG_DEBUG("挂起任务成功!\r\n");
+    APP_LOG_DEBUG("挂起碾米任务成功!\r\n");
    }
    else
    {
-    APP_LOG_DEBUG("挂起任务成功!\r\n");
+    APP_LOG_DEBUG("挂起碾米任务失败!\r\n");
    }
   }
 }
@@ -368,7 +386,11 @@ static void asyn_set_rw_value()
 {
  APP_LOG_DEBUG("设置米重!\r\n"); 
 }
-   
+
+static void asyn_setup_rl()
+{
+APP_LOG_DEBUG("设置出米分度值!\r\n"); 
+}
    
 static void asyn_set_rl_common(uint16_t tar_steps);
 {
@@ -378,6 +400,7 @@ static void asyn_set_rl_common(uint16_t tar_steps);
  {
   if( BSP_is_rl_in_rst_pos()!=BSP_TRUE)
   {
+  osTimerStart(rl_timer_hdl,RL_TIMEOUT_VALUE);
   BSP_rl_motor_run(BSP_RL_MOTOR_DIR_POSITIVE,BSP_RL_MOTOR_STEPS_FOR_RL0);//向复位点运行，到位后发送到位信号
   } 
   else
@@ -389,9 +412,14 @@ static void asyn_set_rl_common(uint16_t tar_steps);
  {
  steps=BSP_rl_get_motor_steps(); 
  if(steps < tar_steps)
- BSP_rl_motor_run(BSP_RL_MOTOR_DIR_POSITIVE,tar_steps-steps);//向目标点运行，到位后发送到位信号 
+ {
+ osTimerStart(rl_timer_hdl,RL_TIMEOUT_VALUE);
+ BSP_rl_motor_run(BSP_RL_MOTOR_DIR_POSITIVE,tar_steps-steps);//向目标点运行，到位后发送到位信号
+ 
+ } 
  else if(steps > tar_steps)
  {
+ osTimerStart(rl_timer_hdl,RL_TIMEOUT_VALUE);
  BSP_rl_motor_run(BSP_RL_MOTOR_DIR_NEGATIVE,steps-tar_steps);//向目标点运行，到位后发送到位信号   
  }
  else
@@ -443,24 +471,28 @@ static void asyn_turn_off_rm_motor()
 
 static void asyn_turn_on_rb1_1_switch()
 {
+osTimerStart(rb1_1_turn_on_timer_hdl,RB1_TIMEOUT_VALUE);
 BSP_rb1_motor_pwr(BSP_PWR_ON_NEGATIVE);
 APP_LOG_DEBUG("打开1号仓!"); 
 }
 
 static void asyn_turn_off_rb1_1_switch()
 {
+osTimerStart(rb1_1_turn_off_timer_hdl,RB1_TIMEOUT_VALUE);
 BSP_rb1_motor_pwr(BSP_PWR_ON_POSITIVE);
 APP_LOG_DEBUG("关闭1号仓!"); 
 }
 
 static void asyn_turn_on_rb1_2_switch()
 {
+osTimerStart(rb1_2_turn_on_timer_hdl,RB1_TIMEOUT_VALUE);
 BSP_rb1_motor_pwr(BSP_PWR_ON_POSITIVE);
 APP_LOG_DEBUG("打开2号仓!"); 
 }
 
 static void asyn_turn_off_rb1_2_switch()
 {
+osTimerStart(rb1_2_turn_off_timer_hdl,RB1_TIMEOUT_VALUE);
 BSP_rb1_motor_pwr(BSP_PWR_ON_NEGATIVE); 
 APP_LOG_DEBUG("关闭2号仓!"); 
 }
@@ -472,12 +504,14 @@ static void asyn_pwr_dwn_rb1_switch()
 
 static void asyn_turn_on_rb2_switch()
 {
+ osTimerStart(rb2_turn_on_timer_hdl,RB2_TIMEOUT_VALUE);
  BSP_rb2_motor_pwr(BSP_PWR_ON_POSITIVE);
  APP_LOG_DEBUG("打开2级仓!"); 
 }
 
 static void asyn_turn_off_rb2_switch()
 {
+ osTimerStart(rb2_turn_off_timer_hdl,RB2_TIMEOUT_VALUE);
  BSP_rb2_motor_pwr(BSP_PWR_ON_NEGATIVE);
  APP_LOG_DEBUG("关闭2级仓!"); 
 }
@@ -513,36 +547,58 @@ APP_LOG_DEBUG("关闭环境灯!");
 
 static void asyn_turn_on_oh_door()
 {
+ osTimerStart(oh_door_turn_on_timer_hdl,OH_DOOR_TIMEOUT_VALUE);
  BSP_oh_door_motor_pwr( BSP_PWR_ON_POSITIVE);
  APP_LOG_DEBUG("打开升降门!");  
 }
 static void asyn_turn_off_oh_door()
 {
+ osTimerStart(oh_door_turn_off_timer_hdl,OH_DOOR_TIMEOUT_VALUE);
  BSP_oh_door_motor_pwr( BSP_PWR_ON_POSITIVE); 
  APP_LOG_DEBUG("关闭升降门!");  
 }
 //断电升降门电机
 static void  asyn_pwr_dwn_oh_door()
 {
- BSP_oh_door_motor_pwr( BSP_PWR_DWN);
+ BSP_oh_door_motor_pwr(BSP_PWR_DWN);
  APP_LOG_DEBUG("断电升降门电机!");  
 }
  break; 
 
 static void asyn_enable_remove_tare()
 {
- osMessagePut(ew_queue_hdl,MSG_EW_REMOVE_TARE,osWaitForever);
- APP_LOG_DEBUG("使能去皮!");   
+ osStatus status;
+ status=osMessagePut(ew_queue_hdl,MSG_EW_REMOVE_TARE,0);
+ if(status==osOk)
+ {
+ APP_LOG_DEBUG("使能去皮!");  
+ }
+else
+{
+  set_rm_fault_code(FAULT_CODE_EW_NO_RESPONSE); 
+  osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT); 
+}
 }
 
 static void asyn_disable_remove_tare()
 {
  APP_LOG_DEBUG("失能去皮!");  
 }
+
 static void asyn_enable_zero_clearing()
 {
- osMessagePut(ew_queue_hdl,MSG_EW_CLEARING_ZERO,osWaitForever);
+ osStatus status;
+ status= osMessagePut(ew_queue_hdl,MSG_EW_CLEARING_ZERO,0);
+ if(status==osOk)
+ {
  APP_LOG_DEBUG("使能清零!");  
+ }
+ else
+{
+  set_rm_fault_code(FAULT_CODE_EW_NO_RESPONSE); 
+  osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT); 
+}
+
 }
 
 static void asyn_disable_zero_clearing()
@@ -550,10 +606,20 @@ static void asyn_disable_zero_clearing()
  APP_LOG_DEBUG("失能清零!");  
 }
 
-static asyn_set_ew_value()
+static asyn_set_ew_threshold_value()
 {
-osMessagePut(ew_queue_hdl,MSG_EW_SET_RICE_WEIGHT_THRESHOLD,osWaitForever);
-APP_LOG_DEBUG("设置定点值:%d!",reg_get_value();  
+osStatus status;
+status=osMessagePut(ew_queue_hdl,MSG_EW_SET_RICE_WEIGHT_THRESHOLD,0);
+ if(status==osOk)
+ {
+ APP_LOG_DEBUG("设置定点值:%d!",get_reg_value(EW_THRESHOLD_REGHOLDING_ADDR,2,REGHOLDING_MODE);    
+ }
+ else
+ {
+  set_rm_fault_code(FAULT_CODE_EW_NO_RESPONSE); 
+  osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT); 
+ }
+
 }
 
 
@@ -625,10 +691,10 @@ static void rice_mill_async_task(void const * argument)
  asyn_turn_on_rb2_switch();   
  break;
  case MSG_TURN_OFF_RB2_SWITCH:
- asyn_turn_off_rb2_switch  
+ asyn_turn_off_rb2_switch();  
  break;   
  case MSG_PWR_DWN_RB2_SWITCH://断电2级米仓电机
- asyn_pwr_dwn_rb2_switch  
+ asyn_pwr_dwn_rb2_switch(); 
  break; 
  case MSG_TURN_ON_UV_LAMP:
  asyn_turn_on_uv_lamp();  
@@ -664,7 +730,10 @@ static void rice_mill_async_task(void const * argument)
  asyn_disable_zero_clearing(); 
  break; 
  case MSG_SET_EW_THRESHOLD_VALUE:
- asyn_set_ew_value(); 
+ asyn_set_ew_threshold_value(); 
+ break; 
+ case MSG_SETUP_RL:
+ asyn_setup_rl(); 
  break; 
  }
  }
@@ -753,9 +822,7 @@ do
  osSignalWait(SYNC_ALL_EVT,0);//clear all signals exsited
  ret=osSignalWait(SYNC_HALT_EVT |SYNC_SET_RL_OK_EVT,osWaitForever);//等待分度调节器到位
  if(ret.status == osEventSignal && ret.value.signals & SYNC_FAULT_EVT)
- {
   sync_shutdown();
- }
 }while(!(ret.status == osEventSignal && ret.value.signals & SYNC_SET_RL_OK_EVT));
 
 while(cur_rice_weight_obtain_times != RICE_WEIGHT_OBTAIN_TIMES_EXPIRED)
@@ -784,22 +851,25 @@ do
  
 do
 {
- sync_set_rb1(SYNC_SWITCH_OFF);//关闭对应的1级仓 1号或者2号
+ sync_set_rb1(REG_VALUE_SWITCH_ON);//关闭对应的1级仓 1号或者2号
  osSignalWait(SYNC_ALL_EVT,0);//clear all signals  exsited
  ret=sSignalWait(SYNC_HALT_EVT |SYNC_CLOSE_RB1_OK_EVT,osWaitForever );//等待一级仓关闭到位
  if(ret.status == osEventSignal && ret.value.signals & SYNC_FAULT_EVT)
-  rm_mill_shutdown();
+  sync_shutdown();
 }while(!(ret.status == osEventSignal && ret.value.signals & SYNC_CLOSE_RB1_OK_EVT));
 
 do
 {
- sync_set_motor(SYNC_SWITCH_ON);//启动碾米电机
+ sync_set_motor(REG_VALUE_SWITCH_ON);//启动碾米电机
  osSignalWait(SYNC_ALL_EVT,0);  //clear all signals  exsited
- ret=osSignalWait(SYNC_HALT_EVT,SYNC_MOTOR_);//等待 1 s 电机稳定转动
+ ret=osSignalWait(SYNC_HALT_EVT,MOTOR_WAIT_EXPIRED_TIMEOUT_VALUE);//等待 1 s 电机稳定转动
  if(ret.status == osEventSignal && ret.value.signals & SYNC_FAULT_EVT)
+ {
+ sync_set_motor(REG_VALUE_SWITCH_OFF);//关闭碾米电机
  rm_mill_shutdown();
+ }
 }
-while(ret.status == osEventSignal && ret.value.signals & SYNC_FAULT_EVT)
+while(!(ret.status == osEventTimeout));
  
 do
 {
@@ -832,7 +902,7 @@ do
  do
  {
  osSignalWait(SYNC_ALL_EVT,0);  //clear all signals  exsited
- ret=osSignalWait(SYNC_HALT_EVT,MOTOR_EXPIRED_TIMEOUT_VALUE );//等待碾米时间到
+ ret=osSignalWait(SYNC_HALT_EVT,MOTOR_RUN_EXPIRED_TIMEOUT_VALUE );//等待碾米时间到
  if(ret.status == osEventSignal && ret.value.signals & SYNC_FAULT_EVT)
  rm_mill_shutdown();
  }while(ret.status == osEventSignal && ret.value.signals & SYNC_FAULT_EVT)
@@ -860,7 +930,7 @@ do
    
  sync_set_take_rice_away();//启动米移走感知
  osSignalWait(SYNC_ALL_EVT,0);  //clear all signals  exsited
- ret=osSignalWait(SYNC_HALT_EVT |SYNC_TAKE_RICE_AWAY_OK_EVT,osWaitForever);//等待米被拿走 
+ ret=osSignalWait(SYNC_HALT_EVT |SYNC_TAKE_RICE_AWAY_OK_EVT,RICE_TAKE_AWAY_TIMEOUT_VALUE);//等待米被拿走 
  
  if(ret.status ==osEventSignal && ret.value.signals & SYNC_TAKE_RICE_AWAY_OK_EVT)
   is_rice_take_away= BSP_TRUE;
@@ -868,7 +938,7 @@ do
   is_rice_take_away= BSP_FALSE;
  do
  {
- sync_set_oh_door(SYNC_SWITCH_OFF);//关闭升降门
+ sync_set_oh_door(REG_VALUE_SWITCH_OFF);//关闭升降门
  osSignalWait(SYNC_ALL_EVT,0);  //clear all signals  exsited
  ret=osSignalWait(SYNC_HALT_EVT |SYNC_CLOSE_OH_DOOR_OK_EVT,osWaitForever );
  if(ret.status == osEventSignal && ret.value.signals & SYNC_FAULT_EVT)
