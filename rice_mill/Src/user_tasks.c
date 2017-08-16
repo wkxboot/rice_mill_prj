@@ -17,6 +17,10 @@
 #endif
 
 /* Variables -----------------------------------------------------------------*/
+
+extern volatile uint16_t bsp_adc_result[BSP_ADC_CONVERT_NUM]; 
+
+
 osThreadId com_with_ew_task_handle;        //下位机从电子秤接收数据的任务handle;
 osThreadId com_with_host_task_handle;      //下位机从主机接收数据的任务handle;
 
@@ -49,8 +53,8 @@ void vApplicationMallocFailedHook(void)
 
 
 
-
- void app_create_user_tasks(void)//创建用户任务
+//创建用户任务
+ void app_create_user_tasks(void)
  {
   
   osThreadDef(communication_with_ew_task, communication_with_ew_task, osPriorityNormal, 0, 128);
@@ -71,9 +75,10 @@ void vApplicationMallocFailedHook(void)
   
   /****消息队列*******/
 
- 
-  
+
  }
+
+
 
 static void tasks_environment_init()
 {
@@ -82,13 +87,9 @@ static void tasks_environment_init()
   
 }
 
-/**
-* @brief -- 
-* @param -- 
-* @return -- 
-* @details --
-* @see --
-*/
+/******************************************************************
+ * 工控机轮询任务
+ ******************************************************************/
 
 void communication_with_host_task(void const * argument)
 {
@@ -104,7 +105,9 @@ void communication_with_host_task(void const * argument)
     ( void )eMBPoll();
     }
   }
-
+/**********************************************************************
+ * 电子秤轮询任务
+ **********************************************************************/
 void communication_with_ew_task(void const * argument)
 {
    APP_LOG_DEBUG("电子秤轮询任务开始 !\r\n");
@@ -120,6 +123,9 @@ void communication_with_ew_task(void const * argument)
   
 }
 
+/************************************************************************
+ *  电子秤功能任务
+ ************************************************************************/
 void ew_func_task(void const * argument)
 {
  osEvent ew_msg;
@@ -168,6 +174,7 @@ void ew_func_task(void const * argument)
  if(err_code==MB_MRE_NO_ERR)
  {
   osSignalSet( rm_sync_task_hdl,SYNC_SET_EW_OK_EVT);
+  osTimerStop()
  }
  break;
  case MSG_EW_REMOVE_TARE://去皮重
@@ -179,7 +186,7 @@ void ew_func_task(void const * argument)
  }
  break;
  case MSG_EW_CLEARING_ZERO://清零
- reg_value=0x0000;
+ reg_value=0x0001;
  err_code=eMBMasterReqWriteHoldingRegister( SLAVE_EW_ADDR,REG_CLEARING_ZERO_ADDR, reg_value, EW_GET_RESOURCE_TIMEOUT);
  if(err_code==MB_MRE_NO_ERR)
  {
@@ -193,7 +200,6 @@ void ew_func_task(void const * argument)
   set_rm_fault_code(FAULT_CODE_EW_NO_RESPONSE); 
   osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);
  }
-
  } 
 }
 
@@ -201,13 +207,13 @@ void sensor_info_task(void const * argument)
 {
 uint32_t fault_code;
 uint16_t t,rh;
+uint16_t adc_result;
+uint16_t reg_value;
+uint16_t rw_cur,rw_tar;
+static uint8_t rw_obtain_interval;
 
-//xEventGroupClearBits(sync_event_hdl,SYNC_ALL_EVT);
-
-/* 温湿度传感器*/
+/* 温度传感器 channel4 */
 t=BSP_get_temperature();
-rh=BSP_get_relative_humidity();
-
 if(TEM_MAX >=t && t>= TEM_MIN)
 { 
   set_reg_value(RB1_1_TEMPERATURE_REGINPUT_ADDR,1, t,REGINPUT_MODE);
@@ -217,7 +223,8 @@ if(TEM_MAX >=t && t>= TEM_MIN)
   osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);
   }
 }
-
+/*湿度传感器 channel5 */
+rh=BSP_get_relative_humidity();
 if(RH_MAX >=rh || rh >= RH_MIN)
 {
  set_reg_value( RB1_1_RH_REGINPUT_ADDR,1, rh,REGINPUT_MODE);
@@ -227,6 +234,49 @@ if(RH_MAX >=rh || rh >= RH_MIN)
  osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);
  }
 }
+/*24v 传感器 channel8 */
+adc_result=BSP_get_24v_sensor();
+if(adc_result > ADC_RESULT_24V_MAX)
+{
+ set_rm_fault_code(FAULT_CODE_BOARD_OC); 
+ osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT); 
+ //关闭所有24v供电
+ osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RB1,0);
+ osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RB2,0);
+ osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RM_MOTOR,0);
+}
+
+/*升降门传感器 channel9*/
+adc_result=BSP_get_oh_door_sensor();
+if(adc_result > ADC_RESULT_OH_DOOR_MAX)
+{
+ set_rm_fault_code(FAULT_CODE_OH_DOOR_MOTOR_BLOCK); 
+ osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);
+ osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_OH_DOOR,0);
+}
+/*碾米电机传感器 channel6*/
+adc_result=BSP_get_rm_motor_sensor();
+if(adc_result > ADC_RESULT_AC_MAX)
+{
+  
+}
+/*交流2传感器 channel7*/
+/*
+adc_result=BSP_get_ac2_sensor();
+if(adc_result > ADC_RESULT_AC_MAX)
+{
+  
+}
+*/
+
+/*步进电机BEMF传感器channel14*/
+adc_result=BSP_get_bemf_sensor();
+if(adc_result > ADC_RESULT_BEMF_MAX)
+{
+  
+}
+
+/*
 /*1号米仓空检查*/
 
 if(BSP_is_rb1_1_empty()==BSP_TRUE)
@@ -247,48 +297,41 @@ if(BSP_is_rb1_2empty()==BSP_TRUE)
 if(BSP_is_rb1_no1_turn_on()==BSP_TRUE)
 {
  osTimerStop(rb1_1_turn_on_timer_hdl);
+ osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RB1,0);
  osSignalSet( rm_sync_task_hdl,SYNC_OPEN_RB1_1_OK_EVT);
 }
  if(BSP_is_rb1_no2_turn_on()==BSP_TRUE)
  {
  osTimerStop(rb1_2_turn_on_timer_hdl);
+ osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RB1,0);
  osSignalSet( rm_sync_task_hdl,SYNC_OPEN_RB1_2_OK_EVT);
  }
  if(BSP_is_rb1_turn_off()==BSP_TRUE)
  {
-  //set_reg_value( RB1_1_SWITCH_REGHOLDING_ADDR,1,REG_VALUE_SWITCH_OFF,REGHOLDING_MODE);
-  //set_reg_value( RB1_2_SWITCH_REGHOLDING_ADDR,1,REG_VALUE_SWITCH_OFF,REGHOLDING_MODE);
   osTimerStop(rb1_turn_off_timer_hdl);
+  osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RB1,0);
   osSignalSet( rm_sync_task_hdl,SYNC_CLOSE_RB1_OK_EVT);
- }
-
- if(BSP_is_rb1_block()==BSP_TRUE)
- {
-  set_rm_fault_code(ERROR_CODE_RB1_SWITCH_BLOCK);
-  osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);
  }
 
 /*2级仓阀门位置检测*/
 if(BSP_is_rb2_turn_on()==BSP_TRUE)
 {
   osTimerStop(rb2_turn_on_timer_hdl);
+  osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RB2,0);
   osSignalSet( rm_sync_task_hdl,SYNC_OPEN_RB2_OK_EVT);
 }
 if(BSP_is_rb2_turn_off()==BSP_TRUE)
 {
   osTimerStop(rb2_turn_off_timer_hdl);
+  osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RB2,0);
   osSignalSet( rm_sync_task_hdl,SYNC_CLOSE_RB2_OK_EVT);
-}
-if(BSP_is_rb2_block()==BSP_TRUE)
-{
- set_rm_fault_code(ERROR_CODE_RB2_SWITCH_BLOCK); 
- osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);
 }
 
 /*升降门位置检测*/
 if(BSP_is_oh_door_turn_on())
 {
  osTimerStop(oh_door_turn_on_timer_hdl);
+ osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_OH_DOOR,0);
  osSignalSet( rm_sync_task_hdl,SYNC_OPEN_OH_DOOR_OK_EVT);
  
 }
@@ -296,13 +339,8 @@ if(BSP_is_oh_door_turn_on())
 if(BSP_is_oh_door_turn_off())
 {
  osTimerStop(oh_door_turn_off_timer_hdl);
+ osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_OH_DOOR,0);
  osSignalSet( rm_sync_task_hdl,SYNC_CLOSE_OH_DOOR_OK_EVT);
-}
-
-if(BSP_is_oh_door_block())
-{
- set_rm_fault_code(FAULT_CODE_OH_DOOR_MOTOR_BLOCK); 
- osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);  
 }
 
 uint16_t oh_door_value;
@@ -317,8 +355,19 @@ else if(BSP_is_oh_door_cleared() && oh_door_state==REG_VALUE_SWITCH_OFF && !BSP_
  osMessagePut(rm_asyn_msg_queue_hdl ,MSG_TURN_OFF_OH_DOOR,0); 
 }
 
+/** 分度调节器***/
+if( BSP_is_rl_in_rst_pos()==BSP_TRUE)
+{
+  if(BSP_rl_get_cur_steps()!=BSP_RL_MOTOR_STEPS_FOR_RL0)
+  {
+    taskENTER_CRITICAL();
+    BSP_rl_reset_steps();
+    taskEXIT_CRITICAL();   
+  //stop_pwm
+  }
+}
 
-/*实时米重*/
+/*实时米重 发送信号 开始读取电子秤毛重*/
 rw_obtain_interval++;
 if(rw_obtain_interval==RW_OBTAIN_INTERVAL)
 {
@@ -326,13 +375,21 @@ osMessagePut(ew_queue_hdl,MSG_EW_OBTAIN_RICE_NET_WEIGHT,osWaitForever);
 rw_obtain_interval=0;
 }
 
-uint16_t rw_cur,rw_tar;
 rw_cur=get_reg_value(EW_NET_WEIGHT_REGINPUT_ADDR,1,REGINPUT_MODE) / 2;
 rw_tar=get_reg_value(RW_REGHOLDING_ADDR,1,REGHOLDING_MODE);
 
  if(BSP_is_ew_signal_ok() && rw_cur >= rw_tar)
  osSignalSet( rm_sync_task_hdl,SYNC_OBTAIN_RW_OK_EVT);
+ 
+/*************** 堵转电压获取*********************/ 
+  HAL_ADC_Start_DMA(&hadc1 ,bsp_adc_result,BSP_ADC_CONVERT_NUM);  
+//延时  
+  osDelay(SENSOR_CHECK_TIMEOUT_VALUE);
 }
+
+
+                                                                          
+
 
 
 /*******************************************************************************
@@ -391,46 +448,10 @@ static void asyn_setup_rl()
 {
 APP_LOG_DEBUG("设置出米分度值!\r\n"); 
 }
-   
-static void asyn_set_rl_common(uint16_t tar_steps);
-{
- uint16_t steps;
- 
- if(tar_steps==BSP_RL_MOTOR_STEPS_FOR_RL0)//0点特殊处理
- {
-  if( BSP_is_rl_in_rst_pos()!=BSP_TRUE)
-  {
-  osTimerStart(rl_timer_hdl,RL_TIMEOUT_VALUE);
-  BSP_rl_motor_run(BSP_RL_MOTOR_DIR_POSITIVE,BSP_RL_MOTOR_STEPS_FOR_RL0);//向复位点运行，到位后发送到位信号
-  } 
-  else
-  {
-  APP_LOG_DEBUG("分度值正确，忽略设定!");  
-  } 
- }
- else
- {
- steps=BSP_rl_get_motor_steps(); 
- if(steps < tar_steps)
- {
- osTimerStart(rl_timer_hdl,RL_TIMEOUT_VALUE);
- BSP_rl_motor_run(BSP_RL_MOTOR_DIR_POSITIVE,tar_steps-steps);//向目标点运行，到位后发送到位信号
- 
- } 
- else if(steps > tar_steps)
- {
- osTimerStart(rl_timer_hdl,RL_TIMEOUT_VALUE);
- BSP_rl_motor_run(BSP_RL_MOTOR_DIR_NEGATIVE,steps-tar_steps);//向目标点运行，到位后发送到位信号   
- }
- else
- {
-  APP_LOG_DEBUG("分度值正确，忽略设定!");  
- }
- }
-}
-   
+     
 static void asyn_set_rl_0()
 {
+ osTimerStart(rl_timer_hdl,RL_TIMEOUT_VALUE);
  asyn_set_rl_common(RL_MOTOR_STEPS_FOR_RL0);
  APP_LOG_DEBUG("执行设置分度为0!");  
 }
@@ -619,10 +640,27 @@ status=osMessagePut(ew_queue_hdl,MSG_EW_SET_RICE_WEIGHT_THRESHOLD,0);
   set_rm_fault_code(FAULT_CODE_EW_NO_RESPONSE); 
   osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT); 
  }
-
 }
-
-
+/*交流电1*/
+static void  asyn_pwr_on_ac1()
+{
+ BSP_pwr_ac1(BSP_PWR_ON); 
+}
+static void  asyn_pwr_dwn_ac1()
+{
+ BSP_pwr_ac1(BSP_PWR_ON); 
+}
+/*交流电2*/
+static void  asyn_pwr_on_ac2()
+{
+ BSP_pwr_ac2(BSP_PWR_ON); 
+}
+static void  asyn_pwr_dwn_ac2()
+{
+ BSP_pwr_ac2(BSP_PWR_ON); 
+}
+               
+         
 static void rice_mill_async_task(void const * argument)
 {
  osEvent event;
@@ -636,11 +674,11 @@ static void rice_mill_async_task(void const * argument)
   
  switch(event.value.v)
  {
- case MSG_TURN_ON_RM:
- asyn_turn_on_rm();  
+ case MSG_START_RM:
+ asyn_start_rm();  
  break;   
- case MSG_TURN_OFF_RM:
- asyn_turn_off_rm();    
+ case MSG_STOP_RM:
+ asyn_stop_rm();    
  break;   
  case MSG_RB1_SELECT_NO1:
  asyn_rb1_select_no1();  
@@ -666,11 +704,11 @@ static void rice_mill_async_task(void const * argument)
  case MSG_SET_RM_FAULT_CODE:
  asyn_set_rm_fault_code(); 
  break;
- case MSG_TURN_ON_RM_MOTOR:
- asyn_turn_on_rm_motor();  
+ case MSG_PWR_ON_RM_MOTOR:
+ asyn_pwr_on_rm_motor();  
  break;   
- case MSG_TURN_OFF_RM_MOTOR:
- asyn_turn_off_rm_motor();    
+ case MSG_PWR_DWN_RM_MOTOR:
+ asyn_pwr_dwn_rm_motor();    
  break;
  case MSG_TURN_ON_RB1_1_SWITCH:
  asyn_turn_on_rb1_1_switch();    
@@ -696,17 +734,17 @@ static void rice_mill_async_task(void const * argument)
  case MSG_PWR_DWN_RB2_SWITCH://断电2级米仓电机
  asyn_pwr_dwn_rb2_switch(); 
  break; 
- case MSG_TURN_ON_UV_LAMP:
- asyn_turn_on_uv_lamp();  
+ case MSG_PWR_ON_UV_LAMP:
+ asyn_pwr_on_uv_lamp();  
  break;   
- case MSG_TURN_OFF_UV_LAMP:
- asyn_turn_off_uv_lamp(); 
+ case MSG_PWR_DWN_UV_LAMP:
+ asyn_pwr_dwn_uv_lamp(); 
  break;
- case MSG_TURN_ON_E_LAMP:
- asyn_turn_on_e_lamp();   
+ case MSG_PWR_ON_E_LAMP:
+ asyn_pwr_on_e_lamp();   
  break;
- case MSG_TURN_OFF_E_LAMP:
- asyn_turn_off_e_lamp(); 
+ case MSG_PWR_DWN_E_LAMP:
+ asyn_pwr_dwn_e_lamp(); 
  break;   
  case MSG_TURN_ON_OH_DOOR:
  asyn_turn_on_oh_door();  
@@ -732,8 +770,20 @@ static void rice_mill_async_task(void const * argument)
  case MSG_SET_EW_THRESHOLD_VALUE:
  asyn_set_ew_threshold_value(); 
  break; 
- case MSG_SETUP_RL:
+ case MSG_SETUP_RL_VALUE:
  asyn_setup_rl(); 
+ break; 
+ case MSG_PWR_ON_AC1:
+ asyn_pwr_on_ac1(); 
+ break; 
+ case MSG_PWR_DWN_AC1:
+ asyn_pwr_dwn_ac1(); 
+ break; 
+ case MSG_PWR_ON_AC2:
+ asyn_pwr_on_ac2(); 
+ break; 
+ case MSG_PWR_DWN_AC2:
+ asyn_pwr_dwn_ac2(); 
  break; 
  }
  }

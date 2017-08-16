@@ -44,6 +44,7 @@
 #define  OH_DOOR_TIMEOUT_VALUE             5000
 
 
-
-
+#define  SENSOR_CHECK_TIMEOUT_VALUE        50//暂定每秒检查20次
+   
+   
 #endif
