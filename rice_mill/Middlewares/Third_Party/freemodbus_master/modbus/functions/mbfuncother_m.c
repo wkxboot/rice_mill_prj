@@ -68,7 +68,7 @@ eMB_MASTER_FuncReportSlaveID( UCHAR * pucFrame, USHORT * usLen )
 {
     memcpy( &pucFrame[MB_PDU_DATA_OFF], &ucMBSlaveID[0], ( size_t )usMBSlaveIDLen );
     *usLen = ( USHORT )( MB_PDU_DATA_OFF + usMBSlaveIDLen );
-    return MB_EX_NONE;
+    return MASTER_MB_EX_NONE;
 }
 
 #endif

@@ -83,13 +83,13 @@ eMBMasterFuncReadDiscreteInputs( UCHAR * pucFrame, USHORT * usLen )
     UCHAR           ucNBytes;
     UCHAR          *ucMBFrame;
 
-    eMB_MASTER_Exception    eStatus = MB_EX_NONE;
+    eMB_MASTER_Exception    eStatus = MASTER_MB_EX_NONE;
     eMB_MASTER_ErrorCode    eRegStatus;
 
     /* If this request is broadcast, and it's read mode. This request don't need execute. */
     if ( xMBMasterRequestIsBroadcast() )
     {
-    	eStatus = MB_EX_NONE;
+    	eStatus = MASTER_MB_EX_NONE;
     }
     else if( *usLen >= MB_PDU_SIZE_MIN + MB_PDU_FUNC_READ_SIZE_MIN )
     {
@@ -128,14 +128,14 @@ eMBMasterFuncReadDiscreteInputs( UCHAR * pucFrame, USHORT * usLen )
         }
         else
         {
-            eStatus = MB_EX_ILLEGAL_DATA_VALUE;
+            eStatus = MASTER_MB_EX_ILLEGAL_DATA_VALUE;
         }
     }
     else
     {
         /* Can't be a valid read coil register request because the length
          * is incorrect. */
-        eStatus = MB_EX_ILLEGAL_DATA_VALUE;
+        eStatus = MASTER_MB_EX_ILLEGAL_DATA_VALUE;
     }
     return eStatus;
 }

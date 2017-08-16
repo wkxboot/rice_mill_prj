@@ -19,8 +19,8 @@ extern          "C"
 #define	PR_END_EXTERN_C                }
 
 #define MB_PORT_HAS_CLOSE              1
-#define ENTER_CRITICAL_SECTION( )      vMBP_MASTER_PortEnterCritical( )
-#define EXIT_CRITICAL_SECTION( )       vMBP_MASTER_PortExitCritical( )
+//#define ENTER_CRITICAL_SECTION( )      vMBP_MASTER_PortEnterCritical( )
+//#define EXIT_CRITICAL_SECTION( )       vMBP_MASTER_PortExitCritical( )
 
 #ifndef TRUE
 #define TRUE                           ( BOOL )1
@@ -31,6 +31,7 @@ extern          "C"
 #endif
 
 /* ----------------------- Type definitions ---------------------------------*/
+/*
     typedef char    BOOL;
 
     typedef signed char BYTE;
@@ -44,7 +45,7 @@ extern          "C"
 
     typedef unsigned long ULONG;
     typedef long    LONG;
-
+*/
 /* ----------------------- Function prototypes ------------------------------*/
     BOOL            bMBP_MASTER_IsWithinException( void );
     void            vMBP_MASTER_Init( void );

@@ -362,7 +362,7 @@
                     <state>$PROJ_DIR$/../Middlewares/Third_Party/freemodbus_master/modbus/rtu</state>
                     <state>$PROJ_DIR$/../Middlewares/Third_Party/freemodbus_master/port</state>
                     <state>$PROJ_DIR$/../Src/user</state>
-                <state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /></option>
+                <state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /></option>
                 <option>
                     <name>CCStdIncCheck</name>
                     <state>0</state>

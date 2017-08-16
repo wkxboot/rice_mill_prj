@@ -7,6 +7,10 @@
 #include "app_error.h"
 #include "app_log.h"
 #include "mb.h"
+#include "mb_m.h"
+#include "rm_bsp.h"
+#include "mb_slave_reg.h"
+#include "mb_slave_msg.h"
 #include "user_tasks.h"
 
 #if APP_LOG_ENABLED > 0    
@@ -17,9 +21,7 @@
 #endif
 
 /* Variables -----------------------------------------------------------------*/
-
-extern volatile uint16_t bsp_adc_result[BSP_ADC_CONVERT_NUM]; 
-
+uint16_t master_get_gross_weight();
 
 osThreadId com_with_ew_task_handle;        //下位机从电子秤接收数据的任务handle;
 osThreadId com_with_host_task_handle;      //下位机从主机接收数据的任务handle;
@@ -147,7 +149,7 @@ void ew_func_task(void const * argument)
  switch(ew_msg.value.v)
  {
  case MSG_EW_OBTAIN_RICE_WEIGHT://毛重
- err_code=eMBMasterReqReadHoldingRegister(SLAVE_EW_ADDR,REG_GROSS_WEIGHT_ADDR,2,EW_GET_RESOURCE_TIMEOUT) 
+ err_code=eMBMasterReqReadHoldingRegister(SLAVE_EW_ADDR,REG_GROSS_WEIGHT_ADDR,2,EW_GET_RESOURCE_TIMEOUT);
  if(err_code==MB_MRE_NO_ERR)
  {
   rice_gross_weight=master_get_gross_weight(); 
@@ -174,7 +176,7 @@ void ew_func_task(void const * argument)
  if(err_code==MB_MRE_NO_ERR)
  {
   osSignalSet( rm_sync_task_hdl,SYNC_SET_EW_OK_EVT);
-  osTimerStop()
+  osTimerStop(rl_timer_hdl);
  }
  break;
  case MSG_EW_REMOVE_TARE://去皮重
@@ -199,6 +201,7 @@ void ew_func_task(void const * argument)
  {
   set_rm_fault_code(FAULT_CODE_EW_NO_RESPONSE); 
   osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);
+  osTimerStop(
  }
  } 
 }

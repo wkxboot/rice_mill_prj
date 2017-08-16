@@ -279,7 +279,7 @@ eMBMasterPoll( void )
 
         case EV_MASTER_EXECUTE:
             ucFunctionCode = ucMBFrame[MB_PDU_FUNC_OFF];
-            eException = MB_EX_ILLEGAL_FUNCTION;
+            eException = MASTER_MB_EX_ILLEGAL_FUNCTION;
             /* If receive frame has exception .The receive function code highest bit is 1.*/
             if(ucFunctionCode >> 7) {
             	eException = (eMB_MASTER_Exception)ucMBFrame[MB_PDU_DATA_OFF];
@@ -313,7 +313,7 @@ eMBMasterPoll( void )
 				}
 			}
             /* If master has exception ,Master will send error process.Otherwise the Master is idle.*/
-            if (eException != MB_EX_NONE) {
+            if (eException != MASTER_MB_EX_NONE) {
             	vMBMasterSetErrorType(EV_ERROR_EXECUTE_FUNCTION);
             	( void ) xMBMasterPortEventPost( EV_MASTER_ERROR_PROCESS );
             }

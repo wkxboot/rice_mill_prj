@@ -101,13 +101,13 @@ eMBMasterFuncReadCoils( UCHAR * pucFrame, USHORT * usLen )
     USHORT          usCoilCount;
     UCHAR           ucByteCount;
 
-    eMB_MASTER_Exception    eStatus = MB_EX_NONE;
+    eMB_MASTER_Exception    eStatus = MASTER_MB_EX_NONE;
     eMB_MASTER_ErrorCode    eRegStatus;
 
     /* If this request is broadcast, and it's read mode. This request don't need execute. */
     if ( xMBMasterRequestIsBroadcast() )
     {
-    	eStatus = MB_EX_NONE;
+    	eStatus = MASTER_MB_EX_NONE;
     }
     else if ( *usLen >= MB_PDU_SIZE_MIN + MB_PDU_FUNC_READ_SIZE_MIN )
     {
@@ -147,14 +147,14 @@ eMBMasterFuncReadCoils( UCHAR * pucFrame, USHORT * usLen )
         }
         else
         {
-            eStatus = MB_EX_ILLEGAL_DATA_VALUE;
+            eStatus = MASTER_MB_EX_ILLEGAL_DATA_VALUE;
         }
     }
     else
     {
         /* Can't be a valid read coil register request because the length
          * is incorrect. */
-        eStatus = MB_EX_ILLEGAL_DATA_VALUE;
+        eStatus = MASTER_MB_EX_ILLEGAL_DATA_VALUE;
     }
     return eStatus;
 }
@@ -205,7 +205,7 @@ eMBMasterFuncWriteCoil( UCHAR * pucFrame, USHORT * usLen )
     USHORT          usRegAddress;
     UCHAR           ucBuf[2];
 
-    eMB_MASTER_Exception    eStatus = MB_EX_NONE;
+    eMB_MASTER_Exception    eStatus = MASTER_MB_EX_NONE;
     eMB_MASTER_ErrorCode    eRegStatus;
 
     if( *usLen == ( MB_PDU_FUNC_WRITE_SIZE + MB_PDU_SIZE_MIN ) )
@@ -238,14 +238,14 @@ eMBMasterFuncWriteCoil( UCHAR * pucFrame, USHORT * usLen )
         }
         else
         {
-            eStatus = MB_EX_ILLEGAL_DATA_VALUE;
+            eStatus = MASTER_MB_EX_ILLEGAL_DATA_VALUE;
         }
     }
     else
     {
         /* Can't be a valid write coil register request because the length
          * is incorrect. */
-        eStatus = MB_EX_ILLEGAL_DATA_VALUE;
+        eStatus = MASTER_MB_EX_ILLEGAL_DATA_VALUE;
     }
     return eStatus;
 }
@@ -318,7 +318,7 @@ eMBMasterFuncWriteMultipleCoils( UCHAR * pucFrame, USHORT * usLen )
     UCHAR           ucByteCountVerify;
     UCHAR          *ucMBFrame;
 
-    eMB_MASTER_Exception    eStatus = MB_EX_NONE;
+    eMB_MASTER_Exception    eStatus = MASTER_MB_EX_NONE;
     eMB_MASTER_ErrorCode    eRegStatus;
 
     /* If this request is broadcast, the *usLen is not need check. */
@@ -358,14 +358,14 @@ eMBMasterFuncWriteMultipleCoils( UCHAR * pucFrame, USHORT * usLen )
         }
         else
         {
-            eStatus = MB_EX_ILLEGAL_DATA_VALUE;
+            eStatus = MASTER_MB_EX_ILLEGAL_DATA_VALUE;
         }
     }
     else
     {
         /* Can't be a valid write coil register request because the length
          * is incorrect. */
-        eStatus = MB_EX_ILLEGAL_DATA_VALUE;
+        eStatus = MASTER_MB_EX_ILLEGAL_DATA_VALUE;
     }
     return eStatus;
 }

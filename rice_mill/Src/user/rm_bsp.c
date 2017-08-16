@@ -1,7 +1,18 @@
+#include "FreeRTOS.h"
+#include "task.h"
+#include "cmsis_os.h"
+#include "gpio.h"
+#include "tim.h"
 #include "rm_bsp.h"
 
 
-volatile uint16_t adc_result[BSP_ADC_CONVERT_NUM];
+volatile uint16_t bsp_adc_result[BSP_ADC_CONVERT_NUM];
+volatile uint16_t bsp_motor_cur_steps;
+volatile uint16_t bsp_motor_tar_steps;
+volatile uint8_t  bsp_motor_pwr_state;
+extern TIM_HandleTypeDef htim8;
+extern TIM_HandleTypeDef htim2;
+
 
 
 
@@ -57,11 +68,6 @@ uint8_t BSP_is_rb1_no1_turn_off()
  
  return ret;   
 }
-uint8_t BSP_is_rb1_block()
-{
-  
-return BSP_FALSE;
-}
 
 uint8_t BSP_is_rb1_no2_turn_on()
 {
@@ -88,10 +94,6 @@ uint8_t BSP_is_rb1_no2_turn_off()
    ret=BSP_FALSE;
  
  return ret;  
-}
-uint8_t BSP_is_rb2_block()
-{
- return BSP_FALSE; 
 }
 
 uint8_t BSP_is_oh_door_turn_on()
@@ -120,10 +122,7 @@ uint8_t BSP_is_oh_door_turn_off()
  
  return ret; 
 }
-uint8_t BSP_is_oh_door_block()
-{
-  
-}
+
 uint8_t BSP_is_oh_door_cleared()
 {
  GPIO_PinState pinstate;
@@ -143,7 +142,7 @@ uint8_t BSP_is_ew_signal_ok()
  GPIO_PinState pinstate;
  uint8_t ret;
  
- pinstate= HAL_GPIO_ReadPin(GPIOA,E_WEIGHT_SIGNAL_POS_Pin);
+ pinstate= HAL_GPIO_ReadPin(E_WEIGHT_SIGNAL_POS_GPIO_Port,E_WEIGHT_SIGNAL_POS_Pin);
  if( pinstate == SIGNAL_OK_PIN_STATE)
    ret= BSP_TRUE;
  else
@@ -199,8 +198,8 @@ uint8_t BSP_rl_get_pwr_state()
 
 void BSP_rl_go_to_pos(uint16_t tar_steps)
 { 
-  uint16_t cur_step,remain_steps;
-  HAL_TIM_PWM_Stop_IT(&htim3, TIM_CHANNEL_1);
+  uint16_t cur_steps;
+  HAL_TIM_PWM_Stop_IT(&htim8, TIM_CHANNEL_1);
   
  bsp_motor_tar_steps=tar_steps;
  cur_steps=BSP_rl_get_motor_cur_steps(); 
@@ -209,13 +208,13 @@ void BSP_rl_go_to_pos(uint16_t tar_steps)
  BSP_rl_set_pwr_state(BSP_PWR_ON_POSITIVE);
 //向目标点运行，到位后发送到位信号
  HAL_GPIO_WritePin(DIR_8711_POS_GPIO_Port, DIR_8711_POS_Pin, RL_DIR_POSITIVE_PIN_STATE);
- HAL_TIM_PWM_Start_IT(&htim3, TIM_CHANNEL_1);
+ HAL_TIM_PWM_Start_IT(&htim8, TIM_CHANNEL_1);
  } 
- else if(steps > tar_steps)
+ else if(cur_steps > tar_steps)
  {
  BSP_rl_set_pwr_state(BSP_PWR_ON_NEGATIVE);
  HAL_GPIO_WritePin(DIR_8711_POS_GPIO_Port, DIR_8711_POS_Pin, RL_DIR_NEGATIVE_PIN_STATE);
- HAL_TIM_PWM_Start_IT(&htim3, TIM_CHANNEL_1);
+ HAL_TIM_PWM_Start_IT(&htim8, TIM_CHANNEL_1);
  }
 }
 
@@ -235,7 +234,7 @@ void BSP_RL_MOTOR_PWM_ISR()
  }
  else
  {
-  HAL_TIM_PWM_Stop_IT(&htim3, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Stop_IT(&htim8, TIM_CHANNEL_1);
   
  }
 }
@@ -296,7 +295,7 @@ void BSP_uv_lump_pwr(uint8_t pwr_state)
  }
 }
 
-void BSP_e_lump_pwr(uint8_t pwr_state)
+void BSP_adv_lump_pwr(uint8_t pwr_state)
 {
  if(pwr_state==BSP_PWR_ON)
  {
@@ -370,9 +369,17 @@ void BSP_ac_fan2_pwr(uint8_t pwr_state)
 
 void BSP_bl_pwm_start(uint16_t pulse)
 {
- TIM_OC_InitTypeDef* sConfig,
- HAL_TIM_PWM_ConfigChannel(&htim2,  uint32_t Channel); 
- HAL_TIM_PWM_Start_IT(&htim2,TIM_CHANNEL_2);
+  TIM_OC_InitTypeDef  sConfigOC;
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = pulse;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
+  sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
+  
+  HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_2);
+  HAL_TIM_PWM_Start_IT(&htim2,TIM_CHANNEL_2);
 }
 void BSP_bl_pwm_stop()
 {
@@ -414,18 +421,19 @@ uint16_t BSP_get_rm_motor_sensor()
  uint16_t adc,rm_motor;
  adc=bsp_adc_result[BSP_ADC_RM_MOTOR_POS];
  rm_motor=VOLTAGE_REF*adc/0x0fff;
- return oh_door;
+ return rm_motor;
 }
-uint16_t BSP_get_bemf_sensor();
+uint16_t BSP_get_bemf_sensor()
 {
  uint16_t adc,bemf;
  adc=bsp_adc_result[BSP_ADC_RM_MOTOR_POS];
  bemf=VOLTAGE_REF*adc/0x0fff;
- return oh_door;
+ return bemf;
 }
 
 
 /* ADC1 channel config func */
+/*
 extern ADC_HandleTypeDef hadc1;  
 void BSP_config_adc_channel(uint32_t channel)
 {
@@ -439,7 +447,7 @@ void BSP_config_adc_channel(uint32_t channel)
     _Error_Handler(__FILE__, __LINE__);
   }
 }
-
+*/
 
 
 

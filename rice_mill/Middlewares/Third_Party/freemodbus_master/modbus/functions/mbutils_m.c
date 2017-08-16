@@ -111,19 +111,19 @@ prveMBError2Exception( eMB_MASTER_ErrorCode eErrorCode )
     switch ( eErrorCode )
     {
         case MB_MASTER_ENOERR:
-            eStatus = MB_EX_NONE;
+            eStatus = MASTER_MB_EX_NONE;
             break;
 
         case MB_MASTER_ENOREG:
-            eStatus = MB_EX_ILLEGAL_DATA_ADDRESS;
+            eStatus = MASTER_MB_EX_ILLEGAL_DATA_ADDRESS;
             break;
 
         case MB_MASTER_ETIMEDOUT:
-            eStatus = MB_EX_SLAVE_BUSY;
+            eStatus = MASTER_MB_EX_SLAVE_BUSY;
             break;
 
         default:
-            eStatus = MB_EX_SLAVE_DEVICE_FAILURE;
+            eStatus = MASTER_MB_EX_SLAVE_DEVICE_FAILURE;
             break;
     }
 

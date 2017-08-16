@@ -110,7 +110,7 @@ eMB_MASTER_Exception
 eMBMasterFuncWriteHoldingRegister( UCHAR * pucFrame, USHORT * usLen )
 {
     USHORT          usRegAddress;
-    eMB_MASTER_Exception    eStatus = MB_EX_NONE;
+    eMB_MASTER_Exception    eStatus = MASTER_MB_EX_NONE;
     eMB_MASTER_ErrorCode    eRegStatus;
 
     if( *usLen == ( MB_PDU_SIZE_MIN + MB_PDU_FUNC_WRITE_SIZE ) )
@@ -132,7 +132,7 @@ eMBMasterFuncWriteHoldingRegister( UCHAR * pucFrame, USHORT * usLen )
     else
     {
         /* Can't be a valid request because the length is incorrect. */
-        eStatus = MB_EX_ILLEGAL_DATA_VALUE;
+        eStatus = MASTER_MB_EX_ILLEGAL_DATA_VALUE;
     }
     return eStatus;
 }
@@ -192,7 +192,7 @@ eMBMasterFuncWriteMultipleHoldingRegister( UCHAR * pucFrame, USHORT * usLen )
     USHORT          usRegCount;
     UCHAR           ucRegByteCount;
 
-    eMB_MASTER_Exception    eStatus = MB_EX_NONE;
+    eMB_MASTER_Exception    eStatus = MASTER_MB_EX_NONE;
     eMB_MASTER_ErrorCode    eRegStatus;
 
     /* If this request is broadcast, the *usLen is not need check. */
@@ -223,13 +223,13 @@ eMBMasterFuncWriteMultipleHoldingRegister( UCHAR * pucFrame, USHORT * usLen )
         }
         else
         {
-            eStatus = MB_EX_ILLEGAL_DATA_VALUE;
+            eStatus = MASTER_MB_EX_ILLEGAL_DATA_VALUE;
         }
     }
     else
     {
         /* Can't be a valid request because the length is incorrect. */
-        eStatus = MB_EX_ILLEGAL_DATA_VALUE;
+        eStatus = MASTER_MB_EX_ILLEGAL_DATA_VALUE;
     }
     return eStatus;
 }
@@ -278,13 +278,13 @@ eMBMasterFuncReadHoldingRegister( UCHAR * pucFrame, USHORT * usLen )
     USHORT          usRegAddress;
     USHORT          usRegCount;
 
-    eMB_MASTER_Exception    eStatus = MB_EX_NONE;
+    eMB_MASTER_Exception    eStatus = MASTER_MB_EX_NONE;
     eMB_MASTER_ErrorCode    eRegStatus;
 
     /* If this request is broadcast, and it's read mode. This request don't need execute. */
     if ( xMBMasterRequestIsBroadcast() )
     {
-    	eStatus = MB_EX_NONE;
+    	eStatus = MASTER_MB_EX_NONE;
     }
     else if( *usLen >= MB_PDU_SIZE_MIN + MB_PDU_FUNC_READ_SIZE_MIN )
     {
@@ -311,13 +311,13 @@ eMBMasterFuncReadHoldingRegister( UCHAR * pucFrame, USHORT * usLen )
         }
         else
         {
-            eStatus = MB_EX_ILLEGAL_DATA_VALUE;
+            eStatus = MASTER_MB_EX_ILLEGAL_DATA_VALUE;
         }
     }
     else
     {
         /* Can't be a valid request because the length is incorrect. */
-        eStatus = MB_EX_ILLEGAL_DATA_VALUE;
+        eStatus = MASTER_MB_EX_ILLEGAL_DATA_VALUE;
     }
     return eStatus;
 }
@@ -386,13 +386,13 @@ eMBMasterFuncReadWriteMultipleHoldingRegister( UCHAR * pucFrame, USHORT * usLen 
     USHORT          usRegWriteCount;
     UCHAR          *ucMBFrame;
 
-    eMB_MASTER_Exception    eStatus = MB_EX_NONE;
+    eMB_MASTER_Exception    eStatus = MASTER_MB_EX_NONE;
     eMB_MASTER_ErrorCode    eRegStatus;
 
     /* If this request is broadcast, and it's read mode. This request don't need execute. */
     if ( xMBMasterRequestIsBroadcast() )
     {
-    	eStatus = MB_EX_NONE;
+    	eStatus = MASTER_MB_EX_NONE;
     }
     else if( *usLen >= MB_PDU_SIZE_MIN + MB_PDU_FUNC_READWRITE_SIZE_MIN )
     {
@@ -430,7 +430,7 @@ eMBMasterFuncReadWriteMultipleHoldingRegister( UCHAR * pucFrame, USHORT * usLen 
         }
         else
         {
-            eStatus = MB_EX_ILLEGAL_DATA_VALUE;
+            eStatus = MASTER_MB_EX_ILLEGAL_DATA_VALUE;
         }
     }
     return eStatus;
