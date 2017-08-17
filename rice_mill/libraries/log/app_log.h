@@ -79,28 +79,28 @@
     if ((APP_LOG_MODULE_LEVEL >= APP_LOG_LEVEL_ERROR) &&                                          \
         (APP_LOG_LEVEL_ERROR <= APP_LOG_DEFAULT_LEVEL))                                           \
     {                                                                                             \
-      APP_LOG_STD_OUT(LOG_ERROR_PREFIX"func_name:%s line:%d\r\n"format,__func__,__LINE__,##arg);  \
+      APP_LOG_STD_OUT(LOG_ERROR_PREFIX"line:%d\r\n"format,__LINE__,##arg);  \
     }
     
 #define APP_LOG_WARNING(format,arg...)                                                            \
     if ((APP_LOG_MODULE_LEVEL >= APP_LOG_LEVEL_WARNING) &&                                        \
         (APP_LOG_LEVEL_WARNING <= APP_LOG_DEFAULT_LEVEL))                                         \
     {                                                                                             \
-      APP_LOG_STD_OUT(LOG_WARNING_PREFIX"func_name:%s line:%d\r\n"format,__func__,__LINE__,##arg);\
+      APP_LOG_STD_OUT(LOG_WARNING_PREFIX"line:%d\r\n"format,__LINE__,##arg);\
     }
     
 #define APP_LOG_INFO(format,arg...)                                                               \
     if ((APP_LOG_MODULE_LEVEL >= APP_LOG_LEVEL_INFO) &&                                           \
         (APP_LOG_LEVEL_INFO <= APP_LOG_DEFAULT_LEVEL))                                            \
     {                                                                                             \
-      APP_LOG_STD_OUT(LOG_INFO_PREFIX"func_name:%s line:%d\r\n"format,__func__,__LINE__,##arg);   \
+      APP_LOG_STD_OUT(LOG_INFO_PREFIX"line:%d\r\n"format,__LINE__,##arg);   \
     }
     
 #define APP_LOG_DEBUG(format,arg...)                                                              \
     if ((APP_LOG_MODULE_LEVEL >= APP_LOG_LEVEL_DEBUG) &&                                          \
         (APP_LOG_LEVEL_DEBUG <= APP_LOG_DEFAULT_LEVEL))                                           \
     {                                                                                             \
-      APP_LOG_STD_OUT(LOG_DEBUG_PREFIX"func_name:%s line:%d\r\n"format,__func__,__LINE__,##arg);  \
+      APP_LOG_STD_OUT(LOG_DEBUG_PREFIX"line:%d\r\n"format,__LINE__,##arg);  \
     }
 
 #else

@@ -128,7 +128,7 @@ eMBRegInputCB_Write( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNRegs )
     
     int  iRegIndex;
 
-    APP_LOG_INFO("internal write input reg! ADDR:%d NUM:%d\r\n",usAddress,usNRegs);
+    //APP_LOG_INFO("internal write input reg! ADDR:%d NUM:%d\r\n",usAddress,usNRegs);
     
     if( ( usAddress >= REG_INPUT_START )
         && ( usAddress + usNRegs <= REG_INPUT_START + REG_INPUT_NREGS ) )
@@ -188,7 +188,7 @@ eMBErrorCode
 eMBRegHoldingCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNRegs, eMBRegisterMode eMode )
 {
     eMBErrorCode    eStatus = MB_ENOERR;
-    //uint16_t prv_value;
+    uint16_t prv_value;
     int             iRegIndex;
 
     if( ( usAddress >= REG_HOLDING_START ) &&
@@ -213,11 +213,11 @@ eMBRegHoldingCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNRegs, eMBRegi
         case MB_REG_WRITE:
             while( usNRegs > 0 )
             {
-                //prv_value=usRegHoldingBuf[iRegIndex];
+                prv_value=usRegHoldingBuf[iRegIndex];
                 usRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
                 usRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
                 /******增加回调处理*****/
-                //if(prv_value!=usRegHoldingBuf[iRegIndex])//和原来的不相等，就触发写事件
+                if(prv_value!=usRegHoldingBuf[iRegIndex] && ptr_msg_handler[iRegIndex])//和原来的不相等同时处理函数不为空，就触发写事件
                 ptr_msg_handler[iRegIndex]();
                 
                 iRegIndex++;

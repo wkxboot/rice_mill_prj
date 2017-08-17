@@ -262,8 +262,8 @@ void ew_func_task(void const * argument)
  err_code=MB_MRE_NO_ERR;
  switch(ew_msg.value.v)
  {
- case MSG_EW_OBTAIN_RICE_WEIGHT://毛重
- err_code=eMBMasterReqReadHoldingRegister(SLAVE_EW_ADDR,REG_GROSS_WEIGHT_ADDR,2,EW_GET_RESOURCE_TIMEOUT);
+ case MSG_EW_OBTAIN_RICE_GROSS_WEIGHT://毛重
+ err_code=eMBMasterReqReadHoldingRegister(SLAVE_EW_ADDR,REG_GROSS_WEIGHT_ADDR,1,EW_GET_RESOURCE_TIMEOUT);
  if(err_code==MB_MRE_NO_ERR)
  {
   rice_gross_weight=master_get_gross_weight(); 
@@ -271,7 +271,7 @@ void ew_func_task(void const * argument)
  }
  break;
  case MSG_EW_OBTAIN_RICE_NET_WEIGHT://净重
- err_code=eMBMasterReqReadHoldingRegister(SLAVE_EW_ADDR,REG_NET_WEIGHT_ADDR,2,EW_GET_RESOURCE_TIMEOUT);
+ err_code=eMBMasterReqReadHoldingRegister(SLAVE_EW_ADDR,REG_NET_WEIGHT_ADDR,1,EW_GET_RESOURCE_TIMEOUT);
  if(err_code==MB_MRE_NO_ERR)
  {
    rice_net_weight= master_get_net_weight();
@@ -290,7 +290,7 @@ void ew_func_task(void const * argument)
  if(err_code==MB_MRE_NO_ERR)
  {
   osSignalSet( rm_sync_task_hdl,SYNC_SET_EW_OK_EVT);
-  osTimerStop(rl_timer_hdl);
+  osTimerStop(ew_timer_hdl);
  }
  break;
  case MSG_EW_REMOVE_TARE://去皮重
@@ -299,6 +299,7 @@ void ew_func_task(void const * argument)
   if(err_code==MB_MRE_NO_ERR)
  {
   osSignalSet( rm_sync_task_hdl,SYNC_SET_EW_OK_EVT);
+  osTimerStop(ew_timer_hdl);
  }
  break;
  case MSG_EW_CLEARING_ZERO://清零
@@ -307,6 +308,7 @@ void ew_func_task(void const * argument)
  if(err_code==MB_MRE_NO_ERR)
  {
   osSignalSet( rm_sync_task_hdl,SYNC_SET_EW_OK_EVT);
+   osTimerStop(ew_timer_hdl);
  }
  break; 
  }
@@ -407,19 +409,19 @@ if(BSP_is_rb1_2_empty()==BSP_TRUE)
 if(BSP_is_rb1_no1_turn_on()==BSP_TRUE)
 {
  osTimerStop(rb1_1_turn_on_timer_hdl);
- osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RB1,0);
+ //osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RB1,0);
  osSignalSet( rm_sync_task_hdl,SYNC_OPEN_RB1_OK_EVT);
 }
  if(BSP_is_rb1_no2_turn_on()==BSP_TRUE)
  {
  osTimerStop(rb1_2_turn_on_timer_hdl);
- osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RB1,0);
+ //osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RB1,0);
  osSignalSet( rm_sync_task_hdl,SYNC_OPEN_RB1_OK_EVT);
  }
  if(BSP_is_rb1_turn_off()==BSP_TRUE)
  {
   osTimerStop(rb1_turn_off_timer_hdl);
-  osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RB1,0);
+  //osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RB1,0);
   osSignalSet( rm_sync_task_hdl,SYNC_CLOSE_RB1_OK_EVT);
  }
 
@@ -797,14 +799,15 @@ static void asyn_pwr_dwn_bl()
 static void rice_mill_asyn_task(void const * argument)
 {
  osEvent event;
+ APP_LOG_DEBUG("rice_mill_asyn_task START!\r\n");
  while(1)
  {
  event= osMessageGet(rm_asyn_msg_queue_hdl,1000);
  if(event.status!=osEventMessage)
  {
-   return ;
+   continue ;
  }
-  continue;//调试点
+  //continue;//调试点
  switch(event.value.v)
  {
  case MSG_START_RM:
@@ -1007,6 +1010,7 @@ void rice_mill_sync_task(void const * argument)
     
 while(1)
 {
+ APP_LOG_DEBUG("rice_mill_sync_task START!\r\n");
  sync_complete();//等待开始
  sync_busy();
 do

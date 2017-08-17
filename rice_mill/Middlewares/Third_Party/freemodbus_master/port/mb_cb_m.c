@@ -57,27 +57,14 @@ USHORT   usMRegHoldBuf[MB_MASTER_TOTAL_SLAVE_NUM][M_REG_HOLDING_NREGS];
 //获取毛重值
 uint16_t master_get_gross_weight()
 {
-  uint16_t g_w;
-  uint8_t hi,lo;
-  
-  hi=usMRegHoldBuf[0][0] & 0xFF;
-  lo=(usMRegHoldBuf[0][0]>>8) & 0xFF;
-  
-  g_w=(uint16_t)hi<<8|lo;
-  return g_w;
+
+  return usMRegHoldBuf[1][0];;
 }
 
 //获取净重值
 uint16_t master_get_net_weight()
 {
-  uint16_t n_w;
-  uint8_t hi,lo;
-  
-  hi=usMRegHoldBuf[0][1] & 0xFF;
-  lo=(usMRegHoldBuf[0][1]>>8) & 0xFF;
-  
-  n_w=(uint16_t)hi<<8|lo;
-  return n_w;
+  return usMRegHoldBuf[1][1];
 }
 
 /**

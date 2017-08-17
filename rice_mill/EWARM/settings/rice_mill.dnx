@@ -42,7 +42,7 @@
         <ITMlogFile>$PROJ_DIR$\ITM.log</ITMlogFile>
     </SWOTraceHWSettings>
     <DebugChecksum>
-        <Checksum>1477623436</Checksum>
+        <Checksum>722990352</Checksum>
     </DebugChecksum>
     <CodeCoverage>
         <Enabled>_ 0</Enabled>
@@ -54,7 +54,10 @@
         <ShowArgs>0</ShowArgs>
     </CallStack>
     <array_types>
-        <Fmt0>USHORT[8]	4	0</Fmt0>
+        <Fmt0>USHORT[11]	4	0</Fmt0>
+        <Fmt1>USHORT[22]	4	0</Fmt1>
+        <Fmt2>USHORT[8]	4	0</Fmt2>
+        <Fmt3>USHORT[97]	4	0</Fmt3>
     </array_types>
     <Trace1>
         <Enabled>0</Enabled>
@@ -145,8 +148,7 @@
         <mode>0</mode>
     </DisassembleMode>
     <Breakpoints2>
-        <Bp0>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_master\modbus\include\mbproto_m.h}.30.1" 0 0 1 "" 0 "" 0</Bp0>
-        <Count>1</Count>
+        <Count>0</Count>
     </Breakpoints2>
     <Aliases>
         <Count>0</Count>
