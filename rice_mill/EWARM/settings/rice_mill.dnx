@@ -28,8 +28,8 @@
         <CpuClock>72000000</CpuClock>
         <ClockAutoDetect>0</ClockAutoDetect>
         <ClockWanted>2000000</ClockWanted>
-        <JtagSpeed>2250000</JtagSpeed>
-        <Prescaler>32</Prescaler>
+        <JtagSpeed>2000000</JtagSpeed>
+        <Prescaler>36</Prescaler>
         <TimeStampPrescIndex>0</TimeStampPrescIndex>
         <TimeStampPrescData>0</TimeStampPrescData>
         <PcSampCYCTAP>1</PcSampCYCTAP>
@@ -42,7 +42,7 @@
         <ITMlogFile>$PROJ_DIR$\ITM.log</ITMlogFile>
     </SWOTraceHWSettings>
     <DebugChecksum>
-        <Checksum>2521126381</Checksum>
+        <Checksum>1477623436</Checksum>
     </DebugChecksum>
     <CodeCoverage>
         <Enabled>_ 0</Enabled>
@@ -145,7 +145,7 @@
         <mode>0</mode>
     </DisassembleMode>
     <Breakpoints2>
-        <Bp0>_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_master\modbus\include\mbproto_m.h}.30.1" 0 0 1 "" 0 "" 0</Bp0>
+        <Bp0>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\Middlewares\Third_Party\freemodbus_master\modbus\include\mbproto_m.h}.30.1" 0 0 1 "" 0 "" 0</Bp0>
         <Count>1</Count>
     </Breakpoints2>
     <Aliases>

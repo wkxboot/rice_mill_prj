@@ -50,7 +50,7 @@ vMB_MASTER_PInit( void )
 }
 
 void
-__assert( const char *pcFile, const char *pcAssertion, int iLine )
+master__assert( const char *pcFile, const char *pcAssertion, int iLine )
 {
     volatile BOOL   bBreakOut = FALSE;
 

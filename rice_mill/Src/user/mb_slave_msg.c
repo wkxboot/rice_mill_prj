@@ -22,13 +22,16 @@ static void set_msg_rb1_1_switch_regholding_write(void);      //0x1008      1号
 static void set_msg_rb1_2_switch_regholding_write(void);      //0x1009      2号米仓阀门
 static void set_msg_rb2_switch_regholding_write(void);        //0x100a      2级米仓阀门
 static void set_msg_uv_lamp_switch_regholding_write(void);    //0x100b      紫外灯开关
-static void set_msg_e_lamp_switch_regholding_write(void);     //0x100c      环境灯开关
+static void set_msg_adv_lamp_switch_regholding_write(void);     //0x100c      环境灯开关
 static void set_msg_oh_door_switch_regholding_write(void);    //0x100d      升降门开关
 static void set_msg_r_tare_regholding_write(void);            //0x100e      去皮
 static void set_msg_z_clearing_regholding_write(void);        //0x100f      清零
 static void set_msg_w_threshold_regholding_write(void);       //0x1010      重量定点值低
 static void set_msg_w_threshold_regholding_write(void);       //0x1011      重量定点值高
 static void set_msg_rl_control_regholding_write(void);        //0x1012      碾米分度值
+static void set_msg_bl_regholding_write();                    //0x1013     呼吸灯
+static void set_msg_ac_fan1_regholding_write();               //0x1014     交流风扇1
+static void set_msg_ac_fan2_regholding_write();               //0x1015     交流风扇2
 
 ptr_regholding_write_handler_t ptr_msg_handler[REG_HOLDING_NREGS]=
 {  
@@ -49,16 +52,19 @@ set_msg_rb1_1_switch_regholding_write,     //0x1008      1号米仓阀门
 set_msg_rb1_2_switch_regholding_write,     //0x1009      2号米仓阀门
 set_msg_rb2_switch_regholding_write,       //0x100a      2级米仓阀门
 set_msg_uv_lamp_switch_regholding_write,   //0x100b      紫外灯开关
-set_msg_e_lamp_switch_regholding_write,    //0x100c      环境灯开关
+set_msg_adv_lamp_switch_regholding_write,  //0x100c      广告灯开关
 set_msg_oh_door_switch_regholding_write,   //0x100d      升降门开关
 set_msg_r_tare_regholding_write,           //0x100e      去皮
 set_msg_z_clearing_regholding_write,       //0x100f      清零
 set_msg_w_threshold_regholding_write,      //0x1010      重量定点值低
-set_msg_w_threshold_regholding_write,       //0x1011      重量定点值高
+set_msg_w_threshold_regholding_write,      //0x1011      重量定点值高
 set_msg_rl_control_regholding_write,       //0x1012      碾米控制分度
+set_msg_bl_regholding_write,                //0x1013     呼吸灯
+set_msg_ac_fan1_regholding_write,           //0x1014     交流风扇1
+set_msg_ac_fan2_regholding_write            //0x1015     交流风扇2
 };
 
-QueueHandle_t rm_asyn_msg_queue_hdl;
+extern QueueHandle_t rm_asyn_msg_queue_hdl;
 
 void mb_slave_msg_init()
 {
@@ -88,7 +94,7 @@ static void set_msg_rm_switch_regholding_write(void)        //0x1000      碾米
    reg_value= get_rm_fault_code();
    if(!reg_value)
    {
-   status= osMessagePut(rm_asyn_msg_queue_hdl ,MSG_TURN_ON_RM,0);
+   status= osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_ON_RM_MOTOR,0);
    APP_LOG_DEBUG("发送消息:开始碾米!status:%d\r\n",status);
    }
    else
@@ -98,7 +104,7 @@ static void set_msg_rm_switch_regholding_write(void)        //0x1000      碾米
  }
  else if(reg_value==REG_VALUE_SWITCH_OFF)
  {
-   status= osMessagePut (rm_asyn_msg_queue_hdl ,MSG_TURN_OFF_RM,0);
+   status= osMessagePut (rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RM_MOTOR,0);
    APP_LOG_DEBUG("发送消息:停止碾米!status:%d\r\n",status);
  }
  (void)status;
@@ -148,7 +154,7 @@ static void set_msg_rw_regholding_write(void)               //0x1002      出米
       reg_value == REG_VALUE_RL_7 ||
       reg_value == REG_VALUE_RL_9 )
    {
-   status= osMessagePut (rm_asyn_msg_queue_hdl ,MSG_SETUP_RL,0);
+   status= osMessagePut (rm_asyn_msg_queue_hdl ,MSG_SETUP_RL_VALUE,0);
    APP_LOG_DEBUG("发送消息:出米分度值! status:%d\r\n",status); 
    }
    (void)status;
@@ -206,12 +212,12 @@ static void set_msg_rm_motor_switch_regholding_write(void)   //0x1007  碾米机
   APP_LOG_DEBUG("写的碾米机电机开关值:%d\r\n",reg_value);
  if(reg_value==REG_VALUE_SWITCH_ON )
  {
-  status= osMessagePut (rm_asyn_msg_queue_hdl ,MSG_TURN_ON_RM_MOTOR,0);
+  status= osMessagePut (rm_asyn_msg_queue_hdl ,MSG_PWR_ON_RM_MOTOR,0);
   APP_LOG_DEBUG("发送消息:打开碾米电机! status:%d\r\n",status); 
  }
  else if(reg_value==REG_VALUE_SWITCH_OFF)
  {
-  status= osMessagePut (rm_asyn_msg_queue_hdl ,MSG_TURN_OFF_RM_MOTOR,0);
+  status= osMessagePut (rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RM_MOTOR,0);
   APP_LOG_DEBUG("发送消息:关闭碾米电机! status:%d\r\n",status); 
  }
   (void)status;
@@ -275,34 +281,34 @@ static void set_msg_uv_lamp_switch_regholding_write(void)    //0x100b      紫�
 {
   osStatus status;
   uint16_t reg_value;
-  reg_value= get_reg_value(E_LAMP_SWITCH_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
+  reg_value= get_reg_value(ADV_LAMP_SWITCH_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
   APP_LOG_DEBUG("写的紫外灯开关值:%d\r\n",reg_value);
  if(reg_value==REG_VALUE_SWITCH_ON )
  {
-  status= osMessagePut (rm_asyn_msg_queue_hdl ,MSG_TURN_ON_E_LAMP,0);
+  status= osMessagePut (rm_asyn_msg_queue_hdl ,MSG_PWR_ON_ADV_LAMP,0);
   APP_LOG_DEBUG("发送消息:打开紫外灯! status:%d\r\n",status); 
  }
  else if(reg_value==REG_VALUE_SWITCH_OFF)
  {
-   status= osMessagePut (rm_asyn_msg_queue_hdl ,MSG_TURN_OFF_E_LAMP,0);
+   status= osMessagePut (rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_ADV_LAMP,0);
   APP_LOG_DEBUG("发送消息:关闭紫外灯! status:%d\r\n",status); 
  } 
   (void)status;
 }
-static void set_msg_e_lamp_switch_regholding_write(void)     //0x100c      环境灯开关
+static void set_msg_adv_lamp_switch_regholding_write(void)     //0x100c      环境灯开关
 {
   osStatus status;
   uint16_t reg_value;
-  reg_value= get_reg_value(E_LAMP_SWITCH_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
+  reg_value= get_reg_value(ADV_LAMP_SWITCH_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
   APP_LOG_DEBUG("写的环境灯开关值:%d\r\n",reg_value);
  if(reg_value==REG_VALUE_SWITCH_ON )
  {
-  status= osMessagePut (rm_asyn_msg_queue_hdl ,MSG_TURN_ON_E_LAMP,0);
+  status= osMessagePut (rm_asyn_msg_queue_hdl ,MSG_PWR_ON_ADV_LAMP,0);
   APP_LOG_DEBUG("发送消息:打开环境灯! status:%d\r\n",status); 
  }
  else if(reg_value==REG_VALUE_SWITCH_OFF)
  {
-   status= osMessagePut (rm_asyn_msg_queue_hdl ,MSG_TURN_OFF_E_LAMP,0);
+   status= osMessagePut (rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_ADV_LAMP,0);
   APP_LOG_DEBUG("发送消息:关闭环境灯! status:%d\r\n",status); 
  }
   (void)status;
@@ -312,7 +318,7 @@ static void set_msg_oh_door_switch_regholding_write(void)    //0x100d      升�
 {
   osStatus status;
   uint16_t reg_value;
-  reg_value= get_reg_value(E_LAMP_SWITCH_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
+  reg_value= get_reg_value(ADV_LAMP_SWITCH_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
   APP_LOG_DEBUG("写的升降门开关值:%d\r\n",reg_value);
  if(reg_value==REG_VALUE_SWITCH_ON )
  {
@@ -330,7 +336,7 @@ static void set_msg_r_tare_regholding_write(void)            //0x100e      去�
 {
   osStatus status;
   uint16_t reg_value;
-  reg_value= get_reg_value(E_LAMP_SWITCH_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
+  reg_value= get_reg_value(ADV_LAMP_SWITCH_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
   APP_LOG_DEBUG("写的去皮值:%d\r\n",reg_value);
  if(reg_value==REG_VALUE_FUNC_ENABLE )
  {
@@ -348,7 +354,7 @@ static void set_msg_z_clearing_regholding_write(void)        //0x100f      清�
 {
   osStatus status;
   uint16_t reg_value;
-  reg_value= get_reg_value(E_LAMP_SWITCH_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
+  reg_value= get_reg_value(ADV_LAMP_SWITCH_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
   APP_LOG_DEBUG("写的清零值:%d\r\n",reg_value);
  if(reg_value==REG_VALUE_FUNC_ENABLE )
  {
@@ -374,4 +380,59 @@ static void set_msg_w_threshold_regholding_write(void)       //0x1010     重量
   APP_LOG_DEBUG("发送消息:写定点值!status:%d\r\n",status);
  }   
  (void)status;
+}
+static void set_msg_bl_regholding_write()                //0x1013     呼吸灯
+{
+  osStatus status;
+  uint16_t reg_value;
+  reg_value= get_reg_value(BL_SWITCH_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
+  APP_LOG_DEBUG("Write bl value:%d\r\n",reg_value);
+ if(reg_value==REG_VALUE_SWITCH_ON )
+ {
+  status= osMessagePut (rm_asyn_msg_queue_hdl ,MSG_PWR_ON_BL,0);
+  APP_LOG_DEBUG("send msg:open bl! status:%d\r\n",status); 
+ }
+ else if(reg_value==REG_VALUE_SWITCH_OFF)
+ {
+   status= osMessagePut (rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_BL,0);
+  APP_LOG_DEBUG("send msg:close bl! status:%d\r\n",status); 
+ }
+  (void)status;  
+  
+}
+static void set_msg_ac_fan1_regholding_write()           //0x1014     交流风扇1
+{
+  osStatus status;
+  uint16_t reg_value;
+  reg_value= get_reg_value(AC_FAN1_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
+  APP_LOG_DEBUG("Write fan1 value:%d\r\n",reg_value);
+ if(reg_value==REG_VALUE_SWITCH_ON )
+ {
+  status= osMessagePut (rm_asyn_msg_queue_hdl ,MSG_PWR_ON_AC_FAN1,0);
+  APP_LOG_DEBUG("send msg:open fan1! status:%d\r\n",status); 
+ }
+ else if(reg_value==REG_VALUE_SWITCH_OFF)
+ {
+   status= osMessagePut (rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_AC_FAN1,0);
+  APP_LOG_DEBUG("send msg:close fan1! status:%d\r\n",status); 
+ }
+  (void)status;  
+}
+static void set_msg_ac_fan2_regholding_write()          //0x1015     交流风扇2
+{
+   osStatus status;
+  uint16_t reg_value;
+  reg_value= get_reg_value(AC_FAN2_REGHOLDING_ADDR, 1,REGHOLDING_MODE);
+  APP_LOG_DEBUG("Write fan2 value:%d\r\n",reg_value);
+ if(reg_value==REG_VALUE_SWITCH_ON )
+ {
+  status= osMessagePut (rm_asyn_msg_queue_hdl ,MSG_PWR_ON_AC_FAN2,0);
+  APP_LOG_DEBUG("send msg:open fan2! status:%d\r\n",status); 
+ }
+ else if(reg_value==REG_VALUE_SWITCH_OFF)
+ {
+   status= osMessagePut (rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_AC_FAN2,0);
+  APP_LOG_DEBUG("send msg:close fan2! status:%d\r\n",status); 
+ }
+  (void)status;  
 }

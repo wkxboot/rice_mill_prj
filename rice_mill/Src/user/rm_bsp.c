@@ -47,7 +47,7 @@ uint8_t BSP_is_rb1_no1_turn_on()
  GPIO_PinState pinstate;
  uint8_t ret;
  
- pinstate= HAL_GPIO_ReadPin(GPIOG,RB1_1_EMPTY_POS_Pin);
+ pinstate= HAL_GPIO_ReadPin(GPIOG,RB1_1_TURN_ON_POS_Pin);
  if( pinstate == ON_POS_PIN_STATE)
    ret= BSP_TRUE;
  else
@@ -55,26 +55,13 @@ uint8_t BSP_is_rb1_no1_turn_on()
  
  return ret;  
 }
-uint8_t BSP_is_rb1_no1_turn_off()
-{
-  GPIO_PinState pinstate;
- uint8_t ret;
- 
- pinstate= HAL_GPIO_ReadPin(GPIOG,RB1_1_EMPTY_POS_Pin);
- if( pinstate == ON_POS_PIN_STATE)
-   ret= BSP_TRUE;
- else
-   ret=BSP_FALSE;
- 
- return ret;   
-}
 
 uint8_t BSP_is_rb1_no2_turn_on()
 {
  GPIO_PinState pinstate;
  uint8_t ret;
  
- pinstate= HAL_GPIO_ReadPin(GPIOG,RB2_TURN_ON_POS_Pin);
+ pinstate= HAL_GPIO_ReadPin(GPIOG,RB1_2_TURN_ON_POS_Pin);
  if( pinstate == ON_POS_PIN_STATE)
    ret= BSP_TRUE;
  else
@@ -82,7 +69,21 @@ uint8_t BSP_is_rb1_no2_turn_on()
  
  return ret;   
 }
-uint8_t BSP_is_rb1_no2_turn_off()
+uint8_t BSP_is_rb1_turn_off()
+{
+ GPIO_PinState pinstate;
+ uint8_t ret;
+ 
+ pinstate= HAL_GPIO_ReadPin(GPIOG,RB1_TURN_OFF_POS_Pin);
+ if( pinstate == ON_POS_PIN_STATE)
+   ret= BSP_TRUE;
+ else
+   ret=BSP_FALSE;
+ 
+ return ret;  
+}
+
+uint8_t BSP_is_rb2_turn_off()
 {
  GPIO_PinState pinstate;
  uint8_t ret;
@@ -150,7 +151,9 @@ uint8_t BSP_is_ew_signal_ok()
  
  return ret;   
 }
-
+/*
+ *步进电机操作
+ */
 uint8_t BSP_is_rl_in_rst_pos()
 {
  GPIO_PinState pinstate;
@@ -200,24 +203,31 @@ void BSP_rl_go_to_pos(uint16_t tar_steps)
 { 
   uint16_t cur_steps;
   HAL_TIM_PWM_Stop_IT(&htim8, TIM_CHANNEL_1);
-  
+  if(tar_steps == BSP_RL_MOTOR_STEPS_FOR_RL0 ||
+     tar_steps == BSP_RL_MOTOR_STEPS_FOR_RL5 ||
+     tar_steps == BSP_RL_MOTOR_STEPS_FOR_RL7 ||
+     tar_steps == BSP_RL_MOTOR_STEPS_FOR_RL9 )
+  {
  bsp_motor_tar_steps=tar_steps;
  cur_steps=BSP_rl_get_motor_cur_steps(); 
- if(cur_steps < tar_steps)
+ if(cur_steps < tar_steps)//正转
  {
  BSP_rl_set_pwr_state(BSP_PWR_ON_POSITIVE);
 //向目标点运行，到位后发送到位信号
  HAL_GPIO_WritePin(DIR_8711_POS_GPIO_Port, DIR_8711_POS_Pin, RL_DIR_POSITIVE_PIN_STATE);
  HAL_TIM_PWM_Start_IT(&htim8, TIM_CHANNEL_1);
  } 
- else if(cur_steps > tar_steps)
+ else if(cur_steps > tar_steps)//反转
  {
  BSP_rl_set_pwr_state(BSP_PWR_ON_NEGATIVE);
  HAL_GPIO_WritePin(DIR_8711_POS_GPIO_Port, DIR_8711_POS_Pin, RL_DIR_NEGATIVE_PIN_STATE);
  HAL_TIM_PWM_Start_IT(&htim8, TIM_CHANNEL_1);
  }
+  }
 }
-
+/*
+ *步进电机中断处理
+ */
 void BSP_RL_MOTOR_PWM_ISR()
 {
  uint8_t pwr_state;
@@ -402,33 +412,55 @@ uint16_t BSP_get_relative_humidity()
  return rh;
 }
 
-uint16_t BSP_get_24v_sensor()
+uint8_t BSP_is_24v_oc()
 {
+ uint8_t ret;
  uint16_t adc,v24;
  adc=bsp_adc_result[BSP_ADC_24V_POS];
  v24=VOLTAGE_REF*adc/0x0fff;
- return v24;
+ if(v24 > ADC_RESULT_24V_MAX)
+ ret=BSP_TRUE;
+ else
+ ret=BSP_FALSE;
+ 
+ return ret;
 }
-uint16_t BSP_get_oh_door_sensor()
+uint8_t BSP_is_oh_door_oc()
 {
+ uint8_t ret;
  uint16_t adc,oh_door;
  adc=bsp_adc_result[BSP_ADC_OH_DOOR_POS];
  oh_door=VOLTAGE_REF*adc/0x0fff;
- return oh_door;
+ if(oh_door > ADC_RESULT_OH_DOOR_MAX)
+ ret= BSP_TRUE;
+ else
+ ret= BSP_FALSE;
+ 
+ return ret;
 }
-uint16_t BSP_get_rm_motor_sensor()
+uint8_t BSP_is_rm_motor_oc()
 {
+ uint8_t ret;
  uint16_t adc,rm_motor;
  adc=bsp_adc_result[BSP_ADC_RM_MOTOR_POS];
  rm_motor=VOLTAGE_REF*adc/0x0fff;
- return rm_motor;
+ if(rm_motor > ADC_RESULT_RM_MOTOR_MAX)
+ ret=BSP_TRUE;
+ else
+ ret=BSP_FALSE;
+ return ret;
 }
-uint16_t BSP_get_bemf_sensor()
+uint8_t BSP_is_bemf_oc()
 {
+ uint8_t ret;
  uint16_t adc,bemf;
  adc=bsp_adc_result[BSP_ADC_RM_MOTOR_POS];
  bemf=VOLTAGE_REF*adc/0x0fff;
- return bemf;
+ if(bemf > ADC_RESULT_BEMF_MAX)
+ ret=BSP_TRUE;
+ else
+ ret=BSP_FALSE;
+ return ret;
 }
 
 

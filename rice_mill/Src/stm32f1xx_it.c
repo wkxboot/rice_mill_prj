@@ -37,14 +37,15 @@
 #include "cmsis_os.h"
 
 /* USER CODE BEGIN 0 */
-void EW_MODBUS_USARTIRQHandler( void );
-void HOST_MODBUS_USARTIRQHandler( void );
+void MASTER_MODBUS_USARTIRQHandler( void );
+void SLAVE_MODBUS_USARTIRQHandler( void );
 void BSP_RL_MOTOR_PWM_ISR();
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
 extern DMA_HandleTypeDef hdma_adc1;
 extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim8;
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 
@@ -198,11 +199,12 @@ void TIM2_IRQHandler(void)
 void USART1_IRQHandler(void)
 {
   /* USER CODE BEGIN USART1_IRQn 0 */
-
+  SLAVE_MODBUS_USARTIRQHandler();
+#if 0
   /* USER CODE END USART1_IRQn 0 */
   HAL_UART_IRQHandler(&huart1);
   /* USER CODE BEGIN USART1_IRQn 1 */
-
+#endif
   /* USER CODE END USART1_IRQn 1 */
 }
 
@@ -212,13 +214,27 @@ void USART1_IRQHandler(void)
 void USART2_IRQHandler(void)
 {
   /* USER CODE BEGIN USART2_IRQn 0 */
-  EW_MODBUS_USARTIRQHandler();
+  MASTER_MODBUS_USARTIRQHandler();
 #if  0
   /* USER CODE END USART2_IRQn 0 */
   HAL_UART_IRQHandler(&huart2);
   /* USER CODE BEGIN USART2_IRQn 1 */
 #endif
   /* USER CODE END USART2_IRQn 1 */
+}
+
+/**
+* @brief This function handles TIM8 update interrupt.
+*/
+void TIM8_UP_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM8_UP_IRQn 0 */
+
+  /* USER CODE END TIM8_UP_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim8);
+  /* USER CODE BEGIN TIM8_UP_IRQn 1 */
+
+  /* USER CODE END TIM8_UP_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

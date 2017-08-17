@@ -30,7 +30,7 @@
 #endif
 
 
-extern osTimerId HOST_MB_timerHandle;
+extern osTimerId SLAVE_MB_timerHandle;
 /* ----------------------- Defines ------------------------------------------*/
 #define TIMER_TIMEOUT_INVALID	( 65535U )
 
@@ -61,7 +61,7 @@ void vMBPortTimersEnable()
 /// \param[in]     millisec      time delay value of the timer.
 /// \return status code that indicates the execution status of the function.
 /// \note MUST REMAIN UNCHANGED: \b osTimerStart shall be consistent in every CMSIS-RTOS.
-  osTimerStart ( HOST_MB_timerHandle, 3);
+  osTimerStart ( SLAVE_MB_timerHandle, 3);
 }
 
 void vMBPortTimersDisable( )
@@ -76,7 +76,7 @@ void vMBPortTimersDisable( )
 }
 
 
-void HOST_MB_timer_expired_callback(void const * argument)
+void SLAVE_MB_timer_expired_callback(void const * argument)
 {
  APP_LOG_DEBUG("MB timer expired!\r\n");
  pxMBPortCBTimerExpired();

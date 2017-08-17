@@ -65,7 +65,6 @@
 
 /* Variables -----------------------------------------------------------------*/
 osThreadId defaultTaskHandle;
-osTimerId HOST_MB_timerHandle;
 
 /* USER CODE BEGIN Variables */
 
@@ -73,7 +72,6 @@ osTimerId HOST_MB_timerHandle;
 
 /* Function prototypes -------------------------------------------------------*/
 void StartDefaultTask(void const * argument);
-extern void HOST_MB_timer_expired_callback(void const * argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -142,11 +140,6 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
   /* USER CODE END RTOS_SEMAPHORES */
-
-  /* Create the timer(s) */
-  /* definition and creation of HOST_MB_timer */
-  osTimerDef(HOST_MB_timer, HOST_MB_timer_expired_callback);
-  HOST_MB_timerHandle = osTimerCreate(osTimer(HOST_MB_timer), osTimerOnce, NULL);
 
   /* USER CODE BEGIN RTOS_TIMERS */
   /* start timers, add new ones, ... */

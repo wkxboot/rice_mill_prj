@@ -4,7 +4,7 @@
 
 /* ----------------------- Defines ------------------------------------------*/
 #define REG_HOLDING_START           0x1000
-#define REG_HOLDING_NREGS           19
+#define REG_HOLDING_NREGS           22
 #define REG_INPUT_START             0x1100
 #define REG_INPUT_NREGS             11
 
@@ -22,12 +22,15 @@ extern ptr_regholding_write_handler_t ptr_msg_handler[REG_HOLDING_NREGS];
 #define  RB1_2_SWITCH_REGHOLDING_ADDR        0x1009
 #define  RB2_SWITCH_REGHOLDING_ADDR          0x100A
 #define  UV_LAMP_SWITCH_REGHOLDING_ADDR      0x100B
-#define  E_LAMP_SWITCH_REGHOLDING_ADDR       0x100C
+#define  ADV_LAMP_SWITCH_REGHOLDING_ADDR     0x100C
 #define  OH_DOOR_SWITCH_REGHOLDING_ADDR      0x100D
 #define  R_TARE_REGHOLDING_ADDR              0x100E         //0x100e      去皮
 #define  Z_CLEARING_REGHOLDING_ADDR          0x100F         //0x100f      清零
 #define  EW_THRESHOLD_REGHOLDING_ADDR        0x1010         //0x1010      重量定点值
 #define  RL_CONTROL_REGHOLDING_ADDR          0x1012
+#define  BL_SWITCH_REGHOLDING_ADDR           0x1013
+#define  AC_FAN1_REGHOLDING_ADDR             0x1014
+#define  AC_FAN2_REGHOLDING_ADDR             0x1015
 
 /********输入寄存器（只读寄存器）*****************/
 #define  FIREMWARE_VERSION_REGINPUT_ADDR     0x1100

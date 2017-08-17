@@ -43,10 +43,15 @@
 #define  FAULT_CODE_RB1_OTH                   (1<<15)
 #define  FAULT_CODE_RB2_OT                    (1<<16)
 #define  FAULT_CODE_RB2_OTH                   (1<<17)
+#define  FAULT_CODE_BOARD_OC                  (1<<18)
 
 
-
-
+/*
+*碾米机进度错误码
+*/
+#define  RM_PROGRESS_COMPLETED                 0x0001
+#define  RM_PROGRESS_EXECUTING                 0x0002
+#define  RM_PROGRESS_ERROR                     0x0004
 
 
 

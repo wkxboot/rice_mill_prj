@@ -36,7 +36,7 @@
 #if MB_MASTER_RTU_ENABLED > 0 || MB_MASTER_ASCII_ENABLED > 0
 /* ----------------------- Variables ----------------------------------------*/
 
-extern osTimerId MB_MASTER_timerHandle;
+extern osTimerId MASTER_MB_timerHandle;
 static void prvvTIMERExpiredISR(void);
 
 
@@ -51,27 +51,27 @@ BOOL xMBMasterPortTimersInit()
 
 void vMBMasterPortTimersT35Enable()
 {
-   osTimerStart ( MB_MASTER_timerHandle, 3);
+   osTimerStart ( MASTER_MB_timerHandle, 3);
 }
 
 void vMBMasterPortTimersConvertDelayEnable()
 {
     uint32_t time = MB_MASTER_DELAY_MS_CONVERT;
 
-   osTimerStart ( MB_MASTER_timerHandle, time);
+   osTimerStart ( MASTER_MB_timerHandle, time);
 }
 
 void vMBMasterPortTimersRespondTimeoutEnable()
 {
     uint32_t time = MB_MASTER_TIMEOUT_MS_RESPOND;
 
-   osTimerStart ( MB_MASTER_timerHandle, time);
+   osTimerStart ( MASTER_MB_timerHandle, time);
 }
 
  void vMBMasterPortTimersDisable()
 {
   APP_LOG_DEBUG("MB MASTER timer stop!\r\n");
-  osTimerStop (MB_MASTER_timerHandle);
+  osTimerStop (MASTER_MB_timerHandle);
 }
 
 void prvvTIMERExpiredISR(void)
@@ -79,7 +79,7 @@ void prvvTIMERExpiredISR(void)
     (void) pxMBMasterPortCBTimerExpired();
 }
 
-void MB1_MASTER_timer_expired_callback(void const * argument)
+void MASTER_MB_timer_expired_callback(void const * argument)
 {
  APP_LOG_DEBUG("MB MASTER timer expired!\r\n");
  prvvTIMERExpiredISR();

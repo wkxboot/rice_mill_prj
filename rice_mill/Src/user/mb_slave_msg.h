@@ -24,11 +24,11 @@
 #define  MSG_PWR_DWN_RB1                     0x0010
 #define  MSG_TURN_ON_RB2_SWITCH              0x0011
 #define  MSG_TURN_OFF_RB2_SWITCH             0x0012
-#define  MSG_PWR_DWN_RB2_SWITCH              0x0013
+#define  MSG_PWR_DWN_RB2                     0x0013
 #define  MSG_PWR_ON_UV_LAMP                  0x0014
 #define  MSG_PWR_DWN_UV_LAMP                 0x0015
-#define  MSG_TURN_ON_E_LAMP                  0x0016
-#define  MSG_PWR_ON_E_LAMP                   0x0017
+#define  MSG_PWR_ON_ADV_LAMP                 0x0016
+#define  MSG_PWR_DWN_ADV_LAMP                0x0017
 #define  MSG_TURN_ON_OH_DOOR                 0x0018
 #define  MSG_TURN_OFF_OH_DOOR                0x0019
 #define  MSG_PWR_DWN_OH_DOOR                 0x001A
@@ -38,13 +38,13 @@
 #define  MSG_DISABLE_ZERO_CLEARING           0x001E
 #define  MSG_SET_EW_THRESHOLD_VALUE          0x001F
 #define  MSG_SETUP_RL_VALUE                  0x0020
-#define  MSG_PWR_ON_AC1                      0x0021                  
-#define  MSG_PWR_DWN_AC1                     0x0022
-#define  MSG_PWR_ON_AC2                      0x0023
-#define  MSG_PWR_DWN_AC2                     0x0024
-
-
-
+#define  MSG_PWR_ON_AC_FAN1                  0x0021                  
+#define  MSG_PWR_DWN_AC_FAN1                 0x0022
+#define  MSG_PWR_ON_AC_FAN2                  0x0023
+#define  MSG_PWR_DWN_AC_FAN2                 0x0024
+#define  MSG_PWR_DWN_RL                      0x0025
+#define  MSG_PWR_ON_BL                       0x0026
+#define  MSG_PWR_DWN_BL                      0x0027
 
 
 

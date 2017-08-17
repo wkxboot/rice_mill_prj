@@ -35,11 +35,15 @@
 #define  BSP_RL_MOTOR_STEPS_FOR_RL5         500
 #define  BSP_RL_MOTOR_STEPS_FOR_RL7         700
 #define  BSP_RL_MOTOR_STEPS_FOR_RL9         900
-
+#define  BSP_RL_MOTOR_STEPS_FOR_STOP        0
 
 
 #define  BSP_RELAY_TIMEOUT_VALUE             20//继电器复位需要时间 单位ms
 
+#define  ADC_RESULT_24V_MAX                  0xff
+#define  ADC_RESULT_OH_DOOR_MAX              0xff
+#define  ADC_RESULT_RM_MOTOR_MAX             0xff  
+#define  ADC_RESULT_BEMF_MAX                 0xff
 
 #define  BSP_ADC_CONVERT_NUM                 7
 
@@ -57,9 +61,11 @@
 uint8_t BSP_is_rb1_1_empty();
 uint8_t BSP_is_rb1_2_empty();
 uint8_t BSP_is_rb1_no1_turn_on();
-uint8_t BSP_is_rb1_no1_turn_off();
 uint8_t BSP_is_rb1_no2_turn_on();
-uint8_t BSP_is_rb1_no2_turn_off();
+uint8_t BSP_is_rb1_turn_off();
+
+uint8_t BSP_is_rb2_turn_off();
+
 uint8_t BSP_is_oh_door_turn_on();
 uint8_t BSP_is_oh_door_turn_off();
 uint8_t BSP_is_oh_door_cleared();
@@ -81,10 +87,10 @@ void BSP_bl_pwm_start(uint16_t pulse);//呼吸灯
 void BSP_bl_pwm_stop();
 uint16_t BSP_get_temperature();
 uint16_t BSP_get_relative_humidity();
-uint16_t BSP_get_24v_sensor();
-uint16_t BSP_get_oh_door_sensor();
-uint16_t BSP_get_rm_motor_sensor();
-uint16_t BSP_get_bemf_sensor();
+uint8_t BSP_is_24v_oc();
+uint8_t BSP_is_oh_door_oc();
+uint8_t BSP_is_rm_motor_oc();
+uint8_t BSP_is_bemf_oc();
 
 
 

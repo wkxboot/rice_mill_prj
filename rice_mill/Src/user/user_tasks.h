@@ -1,5 +1,17 @@
 #ifndef __USER_TASKS_H__
 #define __USER_TASKS_H__
+//温度
+#define  TEM_MAX            50
+#define  TEM_MIN            0
+#define  TEM_WARNING        15
+//相对湿度
+#define  RH_MAX              100
+#define  RH_MIN              0
+#define  RH_WARNING          60
+
+
+
+
 
 /****************************************************
  *碾米机同步任务
@@ -12,7 +24,8 @@
 #define  RB1_RUN_EXPIRED_TIMEOUT_VALUE       5000
 #define  MOTOR_WAIT_EXPIRED_TIMEOUT_VALUE    1000 
 #define  OH_DOOR_RUN_EXPIRED_TIMEOUT_VALUE   5000
-   
+
+#define  RICE_WEIGHT_OBTAIN_TIMES_EXPIRED    2
    
 
 #define  SYNC_FAULT_EVT                  (1<<0)
@@ -23,30 +36,33 @@
 #define  SYNC_CLOSE_RB1_OK_EVT           (1<<5)
 #define  SYNC_OPEN_RB2_OK_EVT            (1<<6) 
 #define  SYNC_CLOSE_RB2_OK_EVT           (1<<7)
-
 #define  SYNC_OPEN_OH_DOOR_OK_EVT        (1<<8)
 #define  SYNC_CLOSE_OH_DOOR_OK_EVT       (1<<9)
-#define  SYNC_TAKE_RICE_AWAY_OK_EVT      (1<<10)
+#define  SYNC_TAKE_RICE_AWAY_OK_EVT      (1<<10)  
+#define  SYNC_ALL_EVT                   (0xFFF)
    
 /************** 碾米机异步任务 *******************************/
 #define  RB1_TIMEOUT_VALUE                 3000
 #define  RB2_TIMEOUT_VALUE                 3000
 #define  RL_TIMEOUT_VALUE                  3000
 #define  OH_DOOR_TIMEOUT_VALUE             5000
+#define  EW_TIMEOUT_VALUE                  2000
 
-
-#define  SENSOR_CHECK_TIMEOUT_VALUE        50//暂定每秒检查20次
+#define  SENSOR_CHECK_TIMEOUT_VALUE           50//暂定每秒检查20次
 
 /********电子秤寄存器地址**********************/
 #define  EW_GET_RESOURCE_TIMEOUT           50 //为了获取电子秤通信权而等待的时间 单位ms
 #define  SLAVE_EW_ADDR                     02
-#define  REG_GROSS_WEIGHT_ADDR             0x0001     
-#define  REG_NET_WEIGHT_ADDR               0x0002
-#define  REG_WEIGHT_THRESHOLD_ADDR         0x000D
-#define  REG_REMOVE_TARE_ADDR              0x0061
-   
+#define  REG_GROSS_WEIGHT_ADDR             0x0000     
+#define  REG_NET_WEIGHT_ADDR               0x0001
+#define  REG_WEIGHT_THRESHOLD_ADDR         0x000C
+#define  REG_REMOVE_TARE_ADDR              0x0060
+#define  REG_CLEARING_ZERO_ADDR            0x0060   
    
 /********电子秤功能任务消息**********************/ 
+
+#define  RW_OBTAIN_INTERVAL                (200/SENSOR_CHECK_TIMEOUT_VALUE)//200m查询一次电子秤重量
+
 #define  MSG_EW_OBTAIN_RICE_WEIGHT         0x0001
 #define  MSG_EW_OBTAIN_RICE_NET_WEIGHT     0x0002
 #define  MSG_EW_SET_RICE_WEIGHT_THRESHOLD  0x0003

@@ -205,7 +205,7 @@ uint32_t APP_TIMESTAMP(void)
 
 int fputc(int ch, FILE *f)
 {
- HAL_UART_Transmit(&huart3,(uint8_t*)&ch,1,0xff);
+ //HAL_UART_Transmit(&huart3,(uint8_t*)&ch,1,0xff);
  return ch;
 }
 

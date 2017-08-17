@@ -104,7 +104,7 @@ xMB_MASTER_UtilGetBits( UCHAR * ucByteBuf, USHORT usBitOffset, UCHAR ucNBits )
 }
 
 eMB_MASTER_Exception
-prveMBError2Exception( eMB_MASTER_ErrorCode eErrorCode )
+prveMASTER_MBError2Exception( eMB_MASTER_ErrorCode eErrorCode )
 {
     eMB_MASTER_Exception    eStatus;
 

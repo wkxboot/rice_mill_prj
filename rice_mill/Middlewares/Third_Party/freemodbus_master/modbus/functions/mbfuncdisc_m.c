@@ -35,7 +35,7 @@
 #define MB_PDU_FUNC_READ_SIZE_MIN           ( 1 )
 
 /* ----------------------- Static functions ---------------------------------*/
-eMB_MASTER_Exception    prveMBError2Exception( eMB_MASTER_ErrorCode eErrorCode );
+eMB_MASTER_Exception    prveMASTER_MBError2Exception( eMB_MASTER_ErrorCode eErrorCode );
 
 /* ----------------------- Start implementation -----------------------------*/
 #if MB_MASTER_RTU_ENABLED > 0 || MB_MASTER_ASCII_ENABLED > 0
@@ -123,7 +123,7 @@ eMBMasterFuncReadDiscreteInputs( UCHAR * pucFrame, USHORT * usLen )
 			/* If an error occured convert it into a Modbus exception. */
 			if( eRegStatus != MB_MASTER_ENOERR )
 			{
-				eStatus = prveMBError2Exception( eRegStatus );
+				eStatus = prveMASTER_MBError2Exception( eRegStatus );
 			}
         }
         else
