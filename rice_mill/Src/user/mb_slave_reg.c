@@ -97,6 +97,8 @@ void set_rm_fault_code(uint32_t err_code_bit)
 {
   uint32_t err_code;
   err_code=get_reg_value( RM_FAULT_CODE_REGHOLDING_ADDR,2,REGHOLDING_MODE);
+  if(err_code & err_code_bit)//存在就不需要再写
+    return;
   err_code|=err_code_bit;
   set_reg_value(RM_FAULT_CODE_REGHOLDING_ADDR,2,err_code,REGHOLDING_MODE); 
 }

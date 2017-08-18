@@ -124,7 +124,7 @@ uint8_t BSP_is_oh_door_turn_off()
  return ret; 
 }
 
-uint8_t BSP_is_oh_door_cleared()
+uint8_t BSP_is_oh_door_pathway_ok()
 {
  GPIO_PinState pinstate;
  uint8_t ret;
@@ -198,7 +198,16 @@ uint8_t BSP_rl_get_pwr_state()
   return bsp_motor_pwr_state;
 }
 
-
+uint8_t BSP_is_rl_in_tar_pos()
+{
+  uint8_t ret;
+ if(BSP_rl_get_motor_tar_steps()==BSP_rl_get_motor_cur_steps())
+ ret=BSP_TRUE;
+ else
+ ret=BSP_FALSE;
+  
+return ret; 
+}
 void BSP_rl_go_to_pos(uint16_t tar_steps)
 { 
   uint16_t cur_steps;

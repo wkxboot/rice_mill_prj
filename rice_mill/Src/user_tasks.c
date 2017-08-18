@@ -111,41 +111,60 @@ void vApplicationMallocFailedHook(void)
  */
 void MASTER_MB_timer_expired_callback(void const * argument);
 void SLAVE_MB_timer_expired_callback(void const * argument);
+
 void rb1_1_turn_on_timer_callback(void const * argument)
 {
+ osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT); 
+ osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RB1,0);
  APP_LOG_DEBUG("rb1_1 turn on timeout!\r\n");
 }
 void rb1_2_turn_on_timer_callback(void const * argument)
 {
-  APP_LOG_DEBUG("rb1_2 turn on timeout!\r\n");
+ osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT); 
+ osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RB2,0);
+ APP_LOG_DEBUG("rb1_2 turn on timeout!\r\n");
 }
 void rb1_turn_off_timer_callback(void const * argument)
 {
-  APP_LOG_DEBUG("rb1 turn off timeout!\r\n"); 
+ osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT); 
+ osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RB1,0);
+ APP_LOG_DEBUG("rb1 turn off timeout!\r\n"); 
 }
 void rb2_turn_on_timer_callback(void const * argument)
 {
-  APP_LOG_DEBUG("rb2 turn on timeout!\r\n"); 
+ osSignalSet( rm_sync_task_hdl,SYNC_OPEN_RB2_OK_EVT);//二级仓通过时间确定 特殊处理
+ osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RB2,0);
+ APP_LOG_DEBUG("rb2 turn on OK!\r\n"); 
 }
 void rb2_turn_off_timer_callback(void const * argument)
 {
+ osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);
+ osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RB2,0);
  APP_LOG_DEBUG("rb2 turn off timeout!\r\n");
 }
 void oh_door_turn_on_timer_callback(void const * argument)
 {
-  APP_LOG_DEBUG("oh door turn on timeout!\r\n"); 
+ osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT); 
+ osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_OH_DOOR,0);
+ APP_LOG_DEBUG("oh door turn on timeout!\r\n"); 
 }
 void oh_door_turn_off_timer_callback(void const * argument)
 {
-  APP_LOG_DEBUG("oh door turn off timeout!\r\n"); 
+ osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT); 
+ osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_OH_DOOR,0);
+ APP_LOG_DEBUG("oh door turn off timeout!\r\n"); 
 }
 void rl_timer_callback(void const * argument)
 {
-  APP_LOG_DEBUG("rl opt timeout!\r\n");
+ osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT); 
+ osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RL,0);
+ APP_LOG_DEBUG("rl opt timeout!\r\n");
 }
 void ew_timer_callback(void const * argument)
 {
-  APP_LOG_DEBUG("ew opt timeout!\r\n"); 
+ osSignalSet(rm_sync_task_hdl,SYNC_FAULT_EVT); 
+
+ APP_LOG_DEBUG("ew opt timeout!\r\n"); 
 }
 
 
@@ -263,22 +282,30 @@ void ew_func_task(void const * argument)
  switch(ew_msg.value.v)
  {
  case MSG_EW_OBTAIN_RICE_GROSS_WEIGHT://毛重
+ do
+ {
  err_code=eMBMasterReqReadHoldingRegister(SLAVE_EW_ADDR,REG_GROSS_WEIGHT_ADDR,1,EW_GET_RESOURCE_TIMEOUT);
  if(err_code==MB_MRE_NO_ERR)
  {
   rice_gross_weight=master_get_gross_weight(); 
   set_reg_value(EW_GROSS_WEIGHT_REGINPUT_ADDR,1, rice_gross_weight,REGINPUT_MODE);
  }
+ }while(err_code!=MB_MRE_NO_ERR);
  break;
  case MSG_EW_OBTAIN_RICE_NET_WEIGHT://净重
+ do
+ {
  err_code=eMBMasterReqReadHoldingRegister(SLAVE_EW_ADDR,REG_NET_WEIGHT_ADDR,1,EW_GET_RESOURCE_TIMEOUT);
  if(err_code==MB_MRE_NO_ERR)
  {
    rice_net_weight= master_get_net_weight();
    set_reg_value(EW_NET_WEIGHT_REGINPUT_ADDR,1, rice_net_weight,REGINPUT_MODE);
  }
+ }while(err_code!=MB_MRE_NO_ERR);
  break;
  case MSG_EW_SET_RICE_WEIGHT_THRESHOLD://设置定点值
+ do
+ {
  threshold=get_reg_value(EW_THRESHOLD_REGHOLDING_ADDR,2,REGHOLDING_MODE);
  temp[0]=(threshold>>16) & 0xffff;
  temp[1]=(threshold>>0)  & 0xffff;
@@ -292,8 +319,11 @@ void ew_func_task(void const * argument)
   osSignalSet( rm_sync_task_hdl,SYNC_SET_EW_OK_EVT);
   osTimerStop(ew_timer_hdl);
  }
+ }while(err_code!=MB_MRE_NO_ERR);
  break;
  case MSG_EW_REMOVE_TARE://去皮重
+ do
+ {
  reg_value=0x0002;
  err_code=eMBMasterReqWriteHoldingRegister( SLAVE_EW_ADDR,REG_REMOVE_TARE_ADDR, reg_value, EW_GET_RESOURCE_TIMEOUT);
   if(err_code==MB_MRE_NO_ERR)
@@ -301,31 +331,29 @@ void ew_func_task(void const * argument)
   osSignalSet( rm_sync_task_hdl,SYNC_SET_EW_OK_EVT);
   osTimerStop(ew_timer_hdl);
  }
+ }while(err_code!=MB_MRE_NO_ERR);
  break;
  case MSG_EW_CLEARING_ZERO://清零
+do
+{
  reg_value=0x0001;
  err_code=eMBMasterReqWriteHoldingRegister( SLAVE_EW_ADDR,REG_CLEARING_ZERO_ADDR, reg_value, EW_GET_RESOURCE_TIMEOUT);
  if(err_code==MB_MRE_NO_ERR)
  {
   osSignalSet( rm_sync_task_hdl,SYNC_SET_EW_OK_EVT);
-   osTimerStop(ew_timer_hdl);
- }
- break; 
- }
- 
- if(err_code==MB_MRE_TIMEDOUT)
- {
-  set_rm_fault_code(FAULT_CODE_EW_NO_RESPONSE); 
-  osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);
   osTimerStop(ew_timer_hdl);
  }
+}while(err_code!=MB_MRE_NO_ERR);
+ break; 
+  }
  } 
 }
 
 void sensor_info_task(void const * argument)
 {
 uint16_t t,rh;
-uint16_t rw_cur,rw_tar;
+uint16_t rw_cur,rw_tar,oh_door_state;
+osEvent ret;
 static uint8_t rw_obtain_interval;
 
 while(1)
@@ -335,9 +363,15 @@ t=BSP_get_temperature();
 if(TEM_MAX >=t && t> TEM_MIN)
 { 
   set_reg_value(RB1_1_TEMPERATURE_REGINPUT_ADDR,1, t,REGINPUT_MODE);
+  set_reg_value(RB1_2_TEMPERATURE_REGINPUT_ADDR,1, t,REGINPUT_MODE);
   if(t > TEM_WARNING)
   {
   set_rm_fault_code(FAULT_CODE_RB1_OT);
+  set_rm_fault_code(FAULT_CODE_RB1_OT);
+  /*
+  ret=osSignalWait(SENSOR_CHECK_RB_T_EVT,0);//是否需要检查温度过高错误，需要就发送错误信号
+  if(ret.status == osEventSignal && ret.value.signals & SENSOR_CHECK_RB_T_EVT)//收到需要检查错误的信号，发送错误信号给同步碾米机
+  */  
   osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);
   }
 }
@@ -346,37 +380,55 @@ rh=BSP_get_relative_humidity();
 if(RH_MAX >=rh || rh >  RH_MIN)
 {
  set_reg_value( RB1_1_RH_REGINPUT_ADDR,1, rh,REGINPUT_MODE);
+ set_reg_value( RB1_2_RH_REGINPUT_ADDR,1, rh,REGINPUT_MODE);
  if(rh > RH_WARNING)
  {
- set_rm_fault_code(FAULT_CODE_RB1_OTH); 
- osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);
+  set_rm_fault_code(FAULT_CODE_RB1_OTH); 
+  set_rm_fault_code(FAULT_CODE_RB2_OTH);
+  /*
+  ret=osSignalWait(SENSOR_CHECK_RB_RH_EVT,0);
+  if(ret.status == osEventSignal && ret.value.signals & SENSOR_CHECK_RB_RH_EVT)//检查相对湿度
+  */
+  osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);
  }
 }
 /*24v 传感器 channel8 */
 
 if(BSP_is_24v_oc() == BSP_TRUE)
 {
- set_rm_fault_code(FAULT_CODE_BOARD_OC); 
+ set_rm_fault_code(FAULT_CODE_BOARD_OC);
+ ret=osSignalWait(SENSOR_CHECK_24V_OC_EVT,0);
+ if(ret.status == osEventSignal && ret.value.signals & SENSOR_CHECK_24V_OC_EVT)
+ {
  osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT); 
  //关闭所有24v供电
  osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RB1,0);
  osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RB2,0);
  osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RM_MOTOR,0);
+ }
 }
 
 /*升降门传感器 channel9*/
 if(BSP_is_oh_door_oc()== BSP_TRUE)
 {
- set_rm_fault_code(FAULT_CODE_OH_DOOR_MOTOR_BLOCK); 
+ set_rm_fault_code(FAULT_CODE_OH_DOOR_MOTOR_OC); 
+ ret=osSignalWait(SENSOR_CHECK_OH_DOOR_OC_EVT,0);
+ if(ret.status == osEventSignal && ret.value.signals & SENSOR_CHECK_OH_DOOR_OC_EVT)
+ {
  osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);
  osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_OH_DOOR,0);
+ }
 }
 /*碾米电机传感器 channel6*/
 if(BSP_is_rm_motor_oc()== BSP_TRUE)
 {
- set_rm_fault_code(FAULT_CODE_OH_DOOR_MOTOR_BLOCK); 
+ set_rm_fault_code(FAULT_CODE_OH_DOOR_MOTOR_OC);
+ ret=osSignalWait(SENSOR_CHECK_RM_MOTOR_OC_EVT,0);
+ if(ret.status == osEventSignal && ret.value.signals & SENSOR_CHECK_RM_MOTOR_OC_EVT)
+ {
  osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);
  osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RM_MOTOR,0); 
+ }
 }
 /*交流2传感器 channel7*/
 
@@ -384,23 +436,35 @@ if(BSP_is_rm_motor_oc()== BSP_TRUE)
 /*步进电机BEMF传感器channel14*/
 if(BSP_is_bemf_oc()== BSP_TRUE)
 {
- set_rm_fault_code(FAULT_CODE_RL_MOTOR_BLOCK); 
+ set_rm_fault_code(FAULT_CODE_RL_MOTOR_OC); 
+ ret=osSignalWait(SENSOR_CHECK_BEMF_OC_EVT,0);
+ if(ret.status == osEventSignal && ret.value.signals & SENSOR_CHECK_BEMF_OC_EVT)
+ {
  osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);
- osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_OH_DOOR,0); 
+ osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RL,0); 
+ }
 }
 
 /*1号米仓空检查*/
 
 if(BSP_is_rb1_1_empty()==BSP_TRUE)
 {
-  set_rm_fault_code(FAULT_CODE_RB1_1_EMPTY); 
+  set_rm_fault_code(FAULT_CODE_RB1_1_EMPTY);
+    /*
+  ret=osSignalWait(SENSOR_CHECK_RB1_1_EMPTY_EVT,0);
+  if(ret.status == osEventSignal && ret.value.signals & SENSOR_CHECK_RB1_1_EMPTY_EVT)
+  */
   osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);
 }
  /*2号米仓空检查*/
 
 if(BSP_is_rb1_2_empty()==BSP_TRUE)
 {
-  set_rm_fault_code(FAULT_CODE_RB1_2_EMPTY); 
+  set_rm_fault_code(FAULT_CODE_RB1_2_EMPTY);
+   /*
+  ret=osSignalWait(SENSOR_CHECK_RB1_2_EMPTY_EVT,0);
+  if(ret.status == osEventSignal && ret.value.signals & SENSOR_CHECK_RB1_2_EMPTY_EVT)
+  */
   osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT);
 }
 
@@ -408,67 +472,93 @@ if(BSP_is_rb1_2_empty()==BSP_TRUE)
 
 if(BSP_is_rb1_no1_turn_on()==BSP_TRUE)
 {
- osTimerStop(rb1_1_turn_on_timer_hdl);
- //osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RB1,0);
- osSignalSet( rm_sync_task_hdl,SYNC_OPEN_RB1_OK_EVT);
+  ret=osSignalWait(SENSOR_CHECK_RB1_1_TURN_ON_EVT,0);
+  if(ret.status == osEventSignal && ret.value.signals & SENSOR_CHECK_RB1_1_TURN_ON_EVT)
+  {
+  osTimerStop(rb1_1_turn_on_timer_hdl);
+  osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RB1,0);
+  osSignalSet( rm_sync_task_hdl,SYNC_OPEN_RB1_OK_EVT);
+  }
 }
  if(BSP_is_rb1_no2_turn_on()==BSP_TRUE)
  {
  osTimerStop(rb1_2_turn_on_timer_hdl);
- //osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RB1,0);
+ osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RB1,0);
  osSignalSet( rm_sync_task_hdl,SYNC_OPEN_RB1_OK_EVT);
  }
  if(BSP_is_rb1_turn_off()==BSP_TRUE)
  {
+   ret=osSignalWait(SENSOR_CHECK_RB1_2_TURN_ON_EVT,0);
+  if(ret.status == osEventSignal && ret.value.signals & SENSOR_CHECK_RB1_2_TURN_ON_EVT)
+  {
   osTimerStop(rb1_turn_off_timer_hdl);
-  //osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RB1,0);
+  osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RB1,0);
   osSignalSet( rm_sync_task_hdl,SYNC_CLOSE_RB1_OK_EVT);
+  }
  }
 
-/*2级仓阀门位置检测 目前有时间估算，没有位置检测*/
+/*2级仓阀门位置检测 目前由时间估算，没有位置检测*/
 /*
 if(BSP_is_rb2_turn_on()==BSP_TRUE)
 {
+  ret=osSignalWait(SENSOR_CHECK_RB2_TURN_ON_EVT,0);
+  if(ret.status == osEventSignal && ret.value.signals & SENSOR_CHECK_RB2_TURN_ON_EVT)
+ {
   osTimerStop(rb2_turn_on_timer_hdl);
   osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RB2,0);
   osSignalSet( rm_sync_task_hdl,SYNC_OPEN_RB2_OK_EVT);
+ }
 }
 */
 if(BSP_is_rb2_turn_off()==BSP_TRUE)
 {
+   ret=osSignalWait(SENSOR_CHECK_RB2_TURN_OFF_EVT,0);
+  if(ret.status == osEventSignal && ret.value.signals & SENSOR_CHECK_RB2_TURN_OFF_EVT)
+  {
   osTimerStop(rb2_turn_off_timer_hdl);
   osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RB2,0);
   osSignalSet( rm_sync_task_hdl,SYNC_CLOSE_RB2_OK_EVT);
+  }
 }
 
 /*升降门位置检测*/
 if(BSP_is_oh_door_turn_on())
 {
+ ret=osSignalWait(SENSOR_CHECK_OH_DOOR_TURN_ON_EVT,0);
+ if(ret.status == osEventSignal && ret.value.signals & SENSOR_CHECK_OH_DOOR_TURN_ON_EVT)
+ {
  osTimerStop(oh_door_turn_on_timer_hdl);
  osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_OH_DOOR,0);
  osSignalSet( rm_sync_task_hdl,SYNC_OPEN_OH_DOOR_OK_EVT); 
+ }
 }
 
 if(BSP_is_oh_door_turn_off())
 {
+ ret=osSignalWait(SENSOR_CHECK_OH_DOOR_TURN_OFF_EVT,0);
+ if(ret.status == osEventSignal && ret.value.signals & SENSOR_CHECK_OH_DOOR_TURN_OFF_EVT)
+ {
  osTimerStop(oh_door_turn_off_timer_hdl);
  osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_OH_DOOR,0);
  osSignalSet( rm_sync_task_hdl,SYNC_CLOSE_OH_DOOR_OK_EVT);
+ }
 }
-
-uint16_t oh_door_state;
+/*
+ ret=osSignalWait(SENSOR_CHECK_OH_DOOR_PATHWAY_EVT,0);
+ if(ret.status == osEventSignal && ret.value.signals & SENSOR_CHECK_OH_DOOR_PATHWAY_EVT)
+*/
 oh_door_state=get_reg_value(OH_DOOR_SWITCH_REGHOLDING_ADDR,1,REGHOLDING_MODE);                          
-if(!BSP_is_oh_door_cleared() && oh_door_state==REG_VALUE_SWITCH_OFF && !BSP_is_oh_door_turn_off() )
+if(!BSP_is_oh_door_pathway_ok() && oh_door_state==REG_VALUE_SWITCH_OFF && !BSP_is_oh_door_turn_off() )
 {
  osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_OH_DOOR,0);
 }
-else if(BSP_is_oh_door_cleared() && oh_door_state==REG_VALUE_SWITCH_OFF && !BSP_is_oh_door_turn_off())
+else if(BSP_is_oh_door_pathway_ok() && oh_door_state==REG_VALUE_SWITCH_OFF && !BSP_is_oh_door_turn_off())
 {
  osMessagePut(rm_asyn_msg_queue_hdl ,MSG_TURN_OFF_OH_DOOR,0); 
 }
-
+                      
 /** 分度调节器***/
-if( BSP_is_rl_in_rst_pos()==BSP_TRUE)
+if( BSP_is_rl_in_rst_pos()==BSP_TRUE && BSP_rl_get_motor_tar_steps()==BSP_RL_MOTOR_STEPS_FOR_RL0)
 {
   if(BSP_rl_get_motor_cur_steps()!=BSP_RL_MOTOR_STEPS_FOR_RL0)
   {
@@ -479,25 +569,38 @@ if( BSP_is_rl_in_rst_pos()==BSP_TRUE)
   }
 }
 
-/*实时米重 发送信号 开始读取电子秤毛重*/
+if( BSP_is_rl_in_tar_pos()==BSP_TRUE)
+{
+  ret=osSignalWait(SENSOR_CHECK_RL_ON_TAR_POS_EVT,0);
+ if(ret.status == osEventSignal && ret.value.signals & SENSOR_CHECK_RL_ON_TAR_POS_EVT)
+ {
+ osTimerStop(rl_timer_hdl);
+ osSignalSet( rm_sync_task_hdl,SYNC_SET_RL_OK_EVT); 
+ }
+   
+}
+/*实时米重 发送信号 开始读取电子秤净重重*/
 rw_obtain_interval++;
 if(rw_obtain_interval==RW_OBTAIN_INTERVAL)
 {
-osMessagePut(ew_msg_queue_hdl,MSG_EW_OBTAIN_RICE_NET_WEIGHT,osWaitForever);
+osMessagePut(ew_msg_queue_hdl,MSG_EW_OBTAIN_RICE_NET_WEIGHT,0);
 rw_obtain_interval=0;
 }
 
-rw_cur=get_reg_value(EW_NET_WEIGHT_REGINPUT_ADDR,1,REGINPUT_MODE) / 2;
-rw_tar=get_reg_value(RW_REGHOLDING_ADDR,1,REGHOLDING_MODE);
-
+ rw_cur=get_reg_value(EW_NET_WEIGHT_REGINPUT_ADDR,1,REGINPUT_MODE);
+ rw_tar=get_reg_value(RW_REGHOLDING_ADDR,1,REGHOLDING_MODE)/RICE_WEIGHT_OBTAIN_TIMES_EXPIRED;
  if(BSP_is_ew_signal_ok() && rw_cur >= rw_tar)
+ {
+ ret=osSignalWait(SYNC_OBTAIN_RW_OK_EVT,0);
+ if(ret.status == osEventSignal && ret.value.signals & SYNC_OBTAIN_RW_OK_EVT) 
  osSignalSet( rm_sync_task_hdl,SYNC_OBTAIN_RW_OK_EVT);
+ }
  
 /*************** 堵转电压获取*********************/ 
   HAL_ADC_Start_DMA(&hadc1 ,(uint32_t*)bsp_adc_result,BSP_ADC_CONVERT_NUM);  
 //喂狗
   HAL_IWDG_Refresh(&hiwdg);
-//延时  
+//睡眠  
   osDelay(SENSOR_CHECK_TIMEOUT_VALUE);
  }
 
@@ -518,11 +621,11 @@ static void asyn_start_rm()
    status=osThreadResume(rm_sync_task_hdl);
    if(status==osOK)
    {
-    APP_LOG_DEBUG("Resume rm task successed!\r\n");
+    APP_LOG_DEBUG("excute resume rm task successed!\r\n");
    }
    else
    {
-    APP_LOG_DEBUG("Resume rm task failed!\r\n"); 
+    APP_LOG_DEBUG("excute resume rm task failed!\r\n"); 
    }
   }
 }
@@ -535,265 +638,254 @@ void asyn_stop_rm()
    status=osThreadSuspend (rm_sync_task_hdl);
    if(status==osOK)
    {
-    APP_LOG_DEBUG("suspend rm task successed!\r\n");
+    APP_LOG_DEBUG("excute suspend rm task successed!\r\n");
    }
    else
    {
-    APP_LOG_DEBUG("suspend rm task failed!\r\n");
+    APP_LOG_DEBUG("excute suspend rm task failed!\r\n");
    }
   }
 }
 
 static void asyn_rb1_select_no1()
 {
- APP_LOG_DEBUG("select no1!\r\n"); 
+ APP_LOG_DEBUG("excute select no1!\r\n"); 
 }
 static void asyn_rb1_select_no2()
 {
- APP_LOG_DEBUG("select no2!\r\n"); 
+ APP_LOG_DEBUG("excute select no2!\r\n"); 
 }
 
 static void asyn_set_rw_value()
 {
- APP_LOG_DEBUG("set rw value!\r\n"); 
+ APP_LOG_DEBUG("excute set rw value!\r\n"); 
 }
 
 static void asyn_setup_rl()
 {
-APP_LOG_DEBUG("set rl value!\r\n"); 
+APP_LOG_DEBUG("excute set rl value!\r\n"); 
 }
      
 static void asyn_set_rl_0()
 {
- osTimerStart(rl_timer_hdl,RL_TIMEOUT_VALUE);
  BSP_rl_go_to_pos(BSP_RL_MOTOR_STEPS_FOR_RL0);
- APP_LOG_DEBUG("set rl 0!");  
+ osTimerStart(rl_timer_hdl,RL_TIMEOUT_VALUE);
+ APP_LOG_DEBUG("excute set rl 0!");  
 }
 
 static void asyn_set_rl_5()
 {
- osTimerStart(rl_timer_hdl,RL_TIMEOUT_VALUE);
  BSP_rl_go_to_pos(BSP_RL_MOTOR_STEPS_FOR_RL5);
- APP_LOG_DEBUG("set rl 5!");  
+ osTimerStart(rl_timer_hdl,RL_TIMEOUT_VALUE);
+ APP_LOG_DEBUG("excute set rl 5!");  
 }
 static void asyn_set_rl_7()
 {
-osTimerStart(rl_timer_hdl,RL_TIMEOUT_VALUE);
 BSP_rl_go_to_pos(BSP_RL_MOTOR_STEPS_FOR_RL7);
-APP_LOG_DEBUG("set rl 7!\r\n");  
+osTimerStart(rl_timer_hdl,RL_TIMEOUT_VALUE);
+APP_LOG_DEBUG("excute set rl 7!\r\n");  
 }
 
 static void asyn_set_rl_9()
 {
-osTimerStart(rl_timer_hdl,RL_TIMEOUT_VALUE);
 BSP_rl_go_to_pos(BSP_RL_MOTOR_STEPS_FOR_RL9);
-APP_LOG_DEBUG("set rl 9!");  
+osTimerStart(rl_timer_hdl,RL_TIMEOUT_VALUE);
+APP_LOG_DEBUG("excute set rl 9!");  
 }
 
 static void asyn_set_rl_stop()
 {
  BSP_rl_go_to_pos(BSP_RL_MOTOR_STEPS_FOR_STOP);
- APP_LOG_DEBUG("SET RL STOP!\r\n");  
+ APP_LOG_DEBUG("excute SET RL STOP!\r\n");  
 }
 
 static void asyn_set_rm_fault_code()
 {
- APP_LOG_DEBUG("set fault code !\r\n");  
+ APP_LOG_DEBUG("excute set fault code !\r\n");  
 }
 
 static void asyn_pwr_on_rm_motor()
 {
-  BSP_rm_motor_pwr(BSP_PWR_ON);
-  APP_LOG_DEBUG("pwr on rm motor!\r\n"); 
+ BSP_rm_motor_pwr(BSP_PWR_ON);
+ osSignalSet(sensor_info_task_hdl,SENSOR_CHECK_24V_OC_EVT|SENSOR_CHECK_RM_MOTOR_OC_EVT);
+ APP_LOG_DEBUG("excute pwr on rm motor!\r\n"); 
 }
 
 static void asyn_pwr_dwn_rm_motor()
 {
   BSP_rm_motor_pwr(BSP_PWR_DWN);
-  APP_LOG_DEBUG("pwr dwn rm motor!\r\n"); 
+  APP_LOG_DEBUG("excute pwr dwn rm motor!\r\n"); 
 }
 
 static void asyn_turn_on_rb1_1_switch()
 {
-osTimerStart(rb1_1_turn_on_timer_hdl,RB1_TIMEOUT_VALUE);
 BSP_rb1_motor_pwr(BSP_PWR_ON_NEGATIVE);
-APP_LOG_DEBUG("open no 1\r\n!"); 
+osSignalSet(sensor_info_task_hdl,SENSOR_CHECK_RB1_1_TURN_ON_EVT|SENSOR_CHECK_24V_OC_EVT);
+osTimerStart(rb1_1_turn_on_timer_hdl,RB1_TIMEOUT_VALUE);
+
+APP_LOG_DEBUG("excute open no 1\r\n!"); 
 }
 
 static void asyn_turn_off_rb1_1_switch()
 {
-osTimerStart(rb1_turn_off_timer_hdl,RB1_TIMEOUT_VALUE);
 BSP_rb1_motor_pwr(BSP_PWR_ON_POSITIVE);
-APP_LOG_DEBUG("close no 1\r\n!"); 
+osSignalSet(sensor_info_task_hdl,SENSOR_CHECK_RB1_TURN_OFF_EVT|SENSOR_CHECK_24V_OC_EVT);
+osTimerStart(rb1_turn_off_timer_hdl,RB1_TIMEOUT_VALUE);
+APP_LOG_DEBUG("excute close no 1\r\n!"); 
 }
 
 static void asyn_turn_on_rb1_2_switch()
 {
-osTimerStart(rb1_2_turn_on_timer_hdl,RB1_TIMEOUT_VALUE);
 BSP_rb1_motor_pwr(BSP_PWR_ON_POSITIVE);
-APP_LOG_DEBUG("open no 2\r\n!"); 
+osSignalSet(sensor_info_task_hdl,SENSOR_CHECK_RB1_2_TURN_ON_EVT|SENSOR_CHECK_24V_OC_EVT);
+osTimerStart(rb1_2_turn_on_timer_hdl,RB1_TIMEOUT_VALUE);
+
+APP_LOG_DEBUG("excute open no 2\r\n!"); 
 }
 
 static void asyn_turn_off_rb1_2_switch()
 {
-osTimerStart(rb1_turn_off_timer_hdl,RB1_TIMEOUT_VALUE);
 BSP_rb1_motor_pwr(BSP_PWR_ON_NEGATIVE); 
-APP_LOG_DEBUG("close no 2\r\n!"); 
+osTimerStart(rb1_turn_off_timer_hdl,RB1_TIMEOUT_VALUE);
+osSignalSet(sensor_info_task_hdl,SENSOR_CHECK_RB1_TURN_OFF_EVT|SENSOR_CHECK_24V_OC_EVT);
+APP_LOG_DEBUG("excute close no 2\r\n!"); 
 }
 static void asyn_pwr_dwn_rb1()
 {
  BSP_rb1_motor_pwr(BSP_PWR_DWN);
- APP_LOG_DEBUG("pwr dwn rb1!\r\n"); 
+ APP_LOG_DEBUG("excute pwr dwn rb1!\r\n"); 
 }
 
 static void asyn_turn_on_rb2_switch()
 {
- osTimerStart(rb2_turn_on_timer_hdl,RB2_TIMEOUT_VALUE);
  BSP_rb2_motor_pwr(BSP_PWR_ON_POSITIVE);
- APP_LOG_DEBUG("turn on rb2!\r\n"); 
+ osTimerStart(rb2_turn_on_timer_hdl,RB2_TIMEOUT_VALUE);
+ osSignalSet(sensor_info_task_hdl,SENSOR_CHECK_24V_OC_EVT);
+ APP_LOG_DEBUG("excute turn on rb2!\r\n"); 
 }
 
 static void asyn_turn_off_rb2_switch()
 {
- osTimerStart(rb2_turn_off_timer_hdl,RB2_TIMEOUT_VALUE);
  BSP_rb2_motor_pwr(BSP_PWR_ON_NEGATIVE);
- APP_LOG_DEBUG("turn off rb2!\r\n"); 
+ osTimerStart(rb2_turn_off_timer_hdl,RB2_TIMEOUT_VALUE);
+ osSignalSet(sensor_info_task_hdl,SENSOR_CHECK_RB2_TURN_OFF_EVT|SENSOR_CHECK_24V_OC_EVT);
+ APP_LOG_DEBUG("excute turn off rb2!\r\n"); 
 }
 //断电2级米仓电机
 static void asyn_pwr_dwn_rb2()
 {
 BSP_rb2_motor_pwr(BSP_PWR_DWN); 
-APP_LOG_DEBUG("pwr dwn rb2!"); 
+APP_LOG_DEBUG("excute pwr dwn rb2!"); 
 }
 
 static void asyn_pwr_on_uv_lamp()
 {
  BSP_uv_lump_pwr(BSP_PWR_ON); 
- APP_LOG_DEBUG("pwr on uv lamp!\r\n");  
+ APP_LOG_DEBUG("excute pwr on uv lamp!\r\n");  
 }
 static void asyn_pwr_dwn_uv_lamp()
 {
  BSP_uv_lump_pwr(BSP_PWR_DWN);  
- APP_LOG_DEBUG("pwr dwn uv lamp!\r\n");   
+ APP_LOG_DEBUG("excute pwr dwn uv lamp!\r\n");   
 }
 
 static void asyn_pwr_on_adv_lamp()
 {
 BSP_adv_lump_pwr(BSP_PWR_ON); 
-APP_LOG_DEBUG("open adv lamp!\r\n");  
+APP_LOG_DEBUG("excute open adv lamp!\r\n");  
 }
 
 static void asyn_pwr_dwn_adv_lamp()
 {
 BSP_adv_lump_pwr(BSP_PWR_DWN);  
-APP_LOG_DEBUG("close adv lamp!\r\n");  
+APP_LOG_DEBUG("excute close adv lamp!\r\n");  
 }
 
 static void asyn_turn_on_oh_door()
 {
- osTimerStart(oh_door_turn_on_timer_hdl,OH_DOOR_TIMEOUT_VALUE);
  BSP_oh_door_motor_pwr( BSP_PWR_ON_POSITIVE);
- APP_LOG_DEBUG("turn on oh door!\r\n");  
+ osTimerStart(oh_door_turn_on_timer_hdl,OH_DOOR_TIMEOUT_VALUE);
+ osSignalSet(sensor_info_task_hdl,SENSOR_CHECK_OH_DOOR_TURN_ON_EVT|SENSOR_CHECK_24V_OC_EVT);
+ APP_LOG_DEBUG("excute turn on oh door!\r\n");  
 }
 static void asyn_turn_off_oh_door()
 {
+ BSP_oh_door_motor_pwr( BSP_PWR_ON_NEGATIVE); 
  osTimerStart(oh_door_turn_off_timer_hdl,OH_DOOR_TIMEOUT_VALUE);
- BSP_oh_door_motor_pwr( BSP_PWR_ON_POSITIVE); 
- APP_LOG_DEBUG("turn off oh door!\r\n");  
+ osSignalSet(sensor_info_task_hdl,SENSOR_CHECK_OH_DOOR_TURN_OFF_EVT|SENSOR_CHECK_24V_OC_EVT);
+ APP_LOG_DEBUG("excute turn off oh door!\r\n");  
 }
 //断电升降门电机
 static void  asyn_pwr_dwn_oh_door()
 {
  BSP_oh_door_motor_pwr(BSP_PWR_DWN);
- APP_LOG_DEBUG("pwr dwn oh door!\r\n");  
+ APP_LOG_DEBUG("excute pwr dwn oh door!\r\n");  
 }
 
 
 static void asyn_enable_remove_tare()
 {
- osStatus status;
- status=osMessagePut(ew_msg_queue_hdl,MSG_EW_REMOVE_TARE,0);
- if(status==osOK)
- {
+ osMessagePut(ew_msg_queue_hdl,MSG_EW_REMOVE_TARE,0);
  osTimerStart(ew_timer_hdl,EW_TIMEOUT_VALUE);
- APP_LOG_DEBUG("enable remove tare!\r\n");  
- }
-else
-{
-  set_rm_fault_code(FAULT_CODE_EW_NO_RESPONSE); 
-  osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT); 
-}
+ APP_LOG_DEBUG("excute enable remove tare!\r\n");  
 }
 
 static void asyn_disable_remove_tare()
 {
- APP_LOG_DEBUG("disable remove tare!\r\n");  
+ APP_LOG_DEBUG("excute disable remove tare!\r\n");  
 }
 
 static void asyn_enable_zero_clearing()
 {
- osStatus status;
- status= osMessagePut(ew_msg_queue_hdl,MSG_EW_CLEARING_ZERO,0);
- if(status==osOK)
- {
+ osMessagePut(ew_msg_queue_hdl,MSG_EW_CLEARING_ZERO,0);
  osTimerStart(ew_timer_hdl,EW_TIMEOUT_VALUE);
- APP_LOG_DEBUG("enable clear 0!\r\n");  
- }
- else
-{
-  set_rm_fault_code(FAULT_CODE_EW_NO_RESPONSE); 
-  osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT); 
-}
+ APP_LOG_DEBUG("excute enable clear 0!\r\n");  
 
 }
 
 static void asyn_disable_zero_clearing()
 {
- APP_LOG_DEBUG("disable clear 0!\r\n");  
+ APP_LOG_DEBUG("excute disable clear 0!\r\n");  
 }
 
 static void asyn_set_ew_threshold_value()
 {
-osStatus status;
-status=osMessagePut(ew_msg_queue_hdl,MSG_EW_SET_RICE_WEIGHT_THRESHOLD,0);
- if(status==osOK)
- {
+
+ osMessagePut(ew_msg_queue_hdl,MSG_EW_SET_RICE_WEIGHT_THRESHOLD,0);
  osTimerStart(ew_timer_hdl,EW_TIMEOUT_VALUE);
- APP_LOG_DEBUG("set ew threshold:%d!\r\n",get_reg_value(EW_THRESHOLD_REGHOLDING_ADDR,2,REGHOLDING_MODE));    
- }
- else
- {
-  set_rm_fault_code(FAULT_CODE_EW_NO_RESPONSE); 
-  osSignalSet( rm_sync_task_hdl,SYNC_FAULT_EVT); 
- }
+ APP_LOG_DEBUG("excute set ew threshold:%d!\r\n",get_reg_value(EW_THRESHOLD_REGHOLDING_ADDR,2,REGHOLDING_MODE));    
 }
                
 /*交流电1*/
 static void  asyn_pwr_on_ac_fan1()
 {
  BSP_ac_fan1_pwr(BSP_PWR_ON); 
+ APP_LOG_DEBUG("excute pwr on ac fan1!\r\n");  
 }
 static void  asyn_pwr_dwn_ac_fan1()
 {
  BSP_ac_fan1_pwr(BSP_PWR_DWN); 
+ APP_LOG_DEBUG("excute pwr dwn ac fan1!\r\n"); 
 }
 /*交流电2*/
 static void  asyn_pwr_on_ac_fan2()
 {
 BSP_ac_fan2_pwr(BSP_PWR_ON);
+APP_LOG_DEBUG("excute pwr on ac fan2!\r\n"); 
 }
 static void  asyn_pwr_dwn_ac_fan2()
 {
 BSP_ac_fan2_pwr(BSP_PWR_DWN);
+APP_LOG_DEBUG("excute pwr dwn ac fan2!\r\n"); 
 }
 
 static void asyn_pwr_on_bl()
 {
- APP_LOG_DEBUG("pwr on bl!\r\n"); 
+ APP_LOG_DEBUG("excute pwr on bl!\r\n"); 
 }
 static void asyn_pwr_dwn_bl()
 {
- APP_LOG_DEBUG("pwr dwn bl!\r\n");  
+ APP_LOG_DEBUG("excute pwr dwn bl!\r\n");  
 }  
 
 static void rice_mill_asyn_task(void const * argument)

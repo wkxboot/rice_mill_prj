@@ -69,7 +69,27 @@
 #define  MSG_EW_REMOVE_TARE                0x0004
 #define  MSG_EW_CLEARING_ZERO              0x0005
 
+/********传感器任务消息**************************/
+#define  SENSOR_CHECK_RICE_GROSS_WEIGHT_EVT      (1<<0)
+#define  SENSOR_CHECK_RICE_NET_WEIGHT_EVT        (1<<1)
+#define  SENSOR_CHECK_RB_T_EVT                   (1<<2)
+#define  SENSOR_CHECK_RB_RH_EVT                  (1<<3)
+#define  SENSOR_CHECK_24V_OC_EVT                 (1<<4)
+#define  SENSOR_CHECK_OH_DOOR_OC_EVT             (1<<5)
+#define  SENSOR_CHECK_OH_DOOR_PATHWAY_EVT        (1<<6)
+#define  SENSOR_CHECK_RM_MOTOR_OC_EVT            (1<<7)
+#define  SENSOR_CHECK_AC2_OC_EVT                 (1<<8)
+#define  SENSOR_CHECK_BEMF_OC_EVT                (1<<9)
+#define  SENSOR_CHECK_RB1_1_EMPTY_EVT            (1<<10)
+#define  SENSOR_CHECK_RB1_2_EMPTY_EVT            (1<<11)
+#define  SENSOR_CHECK_RB1_1_TURN_ON_EVT          (1<<12)
+#define  SENSOR_CHECK_RB1_2_TURN_ON_EVT          (1<<13)
+#define  SENSOR_CHECK_RB1_TURN_OFF_EVT           (1<<14)
+#define  SENSOR_CHECK_RB2_TURN_ON_EVT            (1<<15)
+#define  SENSOR_CHECK_RB2_TURN_OFF_EVT           (1<<16)
+#define  SENSOR_CHECK_OH_DOOR_TURN_ON_EVT        (1<<17)
+#define  SENSOR_CHECK_OH_DOOR_TURN_OFF_EVT       (1<<18)
+#define  SENSOR_CHECK_RL_ON_TAR_POS_EVT          (1<<19)
 
-   
-   
+
 #endif

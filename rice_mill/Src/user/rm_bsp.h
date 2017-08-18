@@ -68,9 +68,10 @@ uint8_t BSP_is_rb2_turn_off();
 
 uint8_t BSP_is_oh_door_turn_on();
 uint8_t BSP_is_oh_door_turn_off();
-uint8_t BSP_is_oh_door_cleared();
+uint8_t BSP_is_oh_door_pathway_ok();
 uint8_t BSP_is_ew_signal_ok();
 uint8_t BSP_is_rl_in_rst_pos();
+uint8_t BSP_is_rl_in_tar_pos();
 uint16_t BSP_rl_get_motor_cur_steps();
 uint16_t BSP_rl_get_motor_tar_steps();
 void BSP_rl_reset_steps();

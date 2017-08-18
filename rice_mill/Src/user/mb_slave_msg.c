@@ -95,17 +95,17 @@ static void set_msg_rm_switch_regholding_write(void)        //0x1000      碾米
    if(!reg_value)
    {
    status= osMessagePut(rm_asyn_msg_queue_hdl ,MSG_PWR_ON_RM_MOTOR,0);
-   APP_LOG_DEBUG("send msg:Start rm!status:%d\r\n",status);
+   APP_LOG_DEBUG("send msg:resume rm!status:%d\r\n",status);
    }
    else
    {
-    APP_LOG_DEBUG("rm in error, canot start!\r\n");
+    APP_LOG_DEBUG("rm in error, canot resume!\r\n");
    }
  }
  else if(reg_value==REG_VALUE_SWITCH_OFF)
  {
    status= osMessagePut (rm_asyn_msg_queue_hdl ,MSG_PWR_DWN_RM_MOTOR,0);
-   APP_LOG_DEBUG("send msg:stop rm!status:%d\r\n",status);
+   APP_LOG_DEBUG("send msg:suspend rm!status:%d\r\n",status);
  }
  (void)status;
 }
